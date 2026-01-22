@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, File, X, Check, Loader2, CloudUpload, FolderOpen } from "lucide-react";
+import { useUploadThing } from "@/lib/uploadthing-client";
 
 type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -24,6 +25,33 @@ export function UploadZone() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const { startUpload } = useUploadThing("fileUploader", {
+    onUploadProgress: (progress) => {
+      setUploadProgress(progress);
+    },
+    onClientUploadComplete: (res) => {
+      if (res && res.length > 0) {
+        const result = res[0];
+        setUploadState("success");
+        setUploadProgress(100);
+        
+        // Redirect to share page after brief delay
+        setTimeout(() => {
+          router.push(`/share/${result.serverData.fileId}`);
+        }, 500);
+      }
+    },
+    onUploadError: (error) => {
+      console.error("Upload error:", error);
+      setErrorMessage(error.message || "Upload failed");
+      setUploadState("error");
+    },
+    onUploadBegin: () => {
+      setUploadState("uploading");
+      setUploadProgress(0);
+    },
+  });
+
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
       return `File size exceeds maximum limit of 200MB. Selected file is ${formatFileSize(file.size)}.`;
@@ -31,59 +59,7 @@ export function UploadZone() {
     return null;
   };
 
-  const uploadFile = useCallback(async (file: File) => {
-    setUploadState("uploading");
-    setUploadProgress(0);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percent);
-        }
-      });
-
-      const response = await new Promise<{ id: string } | { error: string }>((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(JSON.parse(xhr.responseText));
-          } else {
-            try {
-              const errorData = JSON.parse(xhr.responseText);
-              reject(new Error(errorData.error || "Upload failed"));
-            } catch {
-              reject(new Error("Upload failed"));
-            }
-          }
-        };
-        xhr.onerror = () => reject(new Error("Network error occurred"));
-        xhr.open("POST", "/api/upload");
-        xhr.send(formData);
-      });
-
-      if ("error" in response) {
-        throw new Error(response.error);
-      }
-
-      setUploadState("success");
-      setUploadProgress(100);
-      
-      // Redirect to share page after brief delay
-      setTimeout(() => {
-        router.push(`/share/${response.id}`);
-      }, 500);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Upload failed");
-      setUploadState("error");
-    }
-  }, [router]);
-
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     const error = validateFile(file);
     if (error) {
       setErrorMessage(error);
@@ -92,8 +68,11 @@ export function UploadZone() {
     }
     setSelectedFile(file);
     setErrorMessage("");
-    uploadFile(file);
-  }, [uploadFile]);
+    setUploadState("uploading");
+    
+    // Start the upload using UploadThing
+    await startUpload([file]);
+  }, [startUpload]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

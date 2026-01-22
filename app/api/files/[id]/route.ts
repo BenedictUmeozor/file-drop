@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMetadata, isExpired, deleteFile } from '@/lib/storage';
-import { runCleanup } from '@/lib/cleanup';
+import { 
+  getFileMetadata, 
+  isFileExpired, 
+  deleteFileMetadata,
+  cleanupExpiredMetadata 
+} from '@/lib/file-metadata';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -9,7 +13,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Run cleanup in background
-    runCleanup().catch(console.error);
+    cleanupExpiredMetadata();
 
     const { id } = await params;
 
@@ -20,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const metadata = await getMetadata(id);
+    const metadata = getFileMetadata(id);
 
     if (!metadata) {
       return NextResponse.json(
@@ -29,9 +33,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (await isExpired(metadata)) {
-      // Delete expired file
-      await deleteFile(id);
+    if (isFileExpired(metadata)) {
+      // Delete expired file metadata
+      deleteFileMetadata(id);
       return NextResponse.json(
         { error: 'File has expired' },
         { status: 410 }
@@ -45,6 +49,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       mimetype: metadata.mimetype,
       createdAt: metadata.createdAt,
       expiresAt: metadata.expiresAt,
+      // Include UploadThing URL for direct download
+      downloadUrl: metadata.uploadThingUrl,
     });
   } catch (error) {
     console.error('[Files] Error:', error);

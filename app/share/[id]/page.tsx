@@ -17,6 +17,7 @@ interface FileMetadata {
   mimetype: string;
   createdAt: string;
   expiresAt: string;
+  downloadUrl?: string;
 }
 
 function formatFileSize(bytes: number): string {

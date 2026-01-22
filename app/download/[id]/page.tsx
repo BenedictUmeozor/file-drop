@@ -15,6 +15,7 @@ interface FileMetadata {
   mimetype: string;
   createdAt: string;
   expiresAt: string;
+  downloadUrl?: string;
 }
 
 interface FileError {
