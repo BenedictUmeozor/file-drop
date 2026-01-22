@@ -2,11 +2,12 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { nanoid } from "nanoid";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
+import { z } from "zod";
 
 const f = createUploadthing();
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const EXPIRY_DURATION = 60 * 60 * 1000;
+const DEFAULT_EXPIRY_DURATION = 10 * 60 * 1000; // 10 minutes default
 const MAX_FILE_SIZE = "256MB";
 
 export const uploadRouter = {
@@ -16,13 +17,19 @@ export const uploadRouter = {
       maxFileCount: 1,
     },
   })
-    .middleware(async () => {
+    .input(
+      z.object({
+        expiryDuration: z.number().optional(),
+      })
+    )
+    .middleware(async ({ input }) => {
       const fileId = nanoid(12);
       const now = Date.now();
+      const expiryDuration = input?.expiryDuration || DEFAULT_EXPIRY_DURATION;
       return {
         fileId,
         createdAt: now,
-        expiresAt: now + EXPIRY_DURATION,
+        expiresAt: now + expiryDuration,
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {

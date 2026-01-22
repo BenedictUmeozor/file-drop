@@ -2,12 +2,18 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, File, X, Check, Loader2, CloudUpload, FolderOpen } from "lucide-react";
+import { Upload, File, X, Check, Loader2, CloudUpload, FolderOpen, Clock } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing-client";
 
 type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
+
+export const EXPIRY_OPTIONS = [
+  { label: "10 minutes", value: 10 * 60 * 1000 },
+  { label: "30 minutes", value: 30 * 60 * 1000 },
+  { label: "1 hour", value: 60 * 60 * 1000 },
+] as const;
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
@@ -17,13 +23,18 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-export function UploadZone() {
+interface UploadZoneProps {
+  onExpiryChange?: (label: string) => void;
+}
+
+export function UploadZone({ onExpiryChange }: UploadZoneProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [expiryDuration, setExpiryDuration] = useState<number>(EXPIRY_OPTIONS[0].value);
 
   const { startUpload } = useUploadThing("fileUploader", {
     onUploadProgress: (progress) => {
@@ -70,9 +81,9 @@ export function UploadZone() {
     setErrorMessage("");
     setUploadState("uploading");
     
-    // Start the upload using UploadThing
-    await startUpload([file]);
-  }, [startUpload]);
+    // Start the upload using UploadThing with expiry duration
+    await startUpload([file], { expiryDuration });
+  }, [startUpload, expiryDuration]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -220,9 +231,34 @@ export function UploadZone() {
             <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Drag & drop files here
             </h2>
-            <p className="mb-8 text-sm font-medium text-slate-400 dark:text-slate-500">
+            <p className="mb-4 text-sm font-medium text-slate-400 dark:text-slate-500">
               Max file size 200MB
             </p>
+            
+            {/* Expiry Time Selection */}
+            <div className="mb-6 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+              <span className="text-sm text-slate-500 dark:text-slate-400">Expires in:</span>
+              <select
+                value={expiryDuration}
+                onChange={(e) => {
+                  const newValue = Number(e.target.value);
+                  setExpiryDuration(newValue);
+                  const option = EXPIRY_OPTIONS.find(opt => opt.value === newValue);
+                  if (option && onExpiryChange) {
+                    onExpiryChange(option.label);
+                  }
+                }}
+                className="z-20 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              >
+                {EXPIRY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
             <button
               onClick={handleBrowseClick}
               className="bg-primary shadow-primary/25 hover:shadow-glow group/btn z-20 flex items-center gap-2 rounded-lg px-8 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-[#13aba4] active:scale-95"

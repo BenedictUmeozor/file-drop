@@ -1,9 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { UploadZone } from "@/components/upload-zone";
+import { UploadZone, EXPIRY_OPTIONS } from "@/components/upload-zone";
 import { CloudUpload, Info } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+  const [expiryLabel, setExpiryLabel] = useState<string>(EXPIRY_OPTIONS[0].label);
+
   return (
     <>
       <header className="relative z-50 flex w-full items-center justify-between border-b border-transparent px-6 py-5 md:px-12">
@@ -69,13 +74,13 @@ export default function Home() {
           {/* Upload Card */}
           <div className="shadow-soft transform rounded-2xl border border-slate-100 bg-white p-2 transition-all hover:shadow-lg dark:border-slate-700/50 dark:bg-[#2b3036] dark:shadow-none">
             {/* Inner Dashed Zone */}
-            <UploadZone />
+            <UploadZone onExpiryChange={setExpiryLabel} />
 
             {/* Footer of Card */}
             <div className="flex flex-col items-center justify-center gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50 px-6 py-4 text-center sm:flex-row sm:text-left dark:border-slate-700/50 dark:bg-[#323840]">
               <Info className="text-primary h-4 w-4" />
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                No account needed. Files expire in 10 minutes.
+                No account needed. Files expire in {expiryLabel.toLowerCase()}.
               </p>
             </div>
           </div>

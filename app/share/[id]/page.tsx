@@ -185,7 +185,7 @@ export default async function SharePage({ params }: PageProps) {
                 <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
                   This file may have expired or doesn&apos;t exist.
                   <br />
-                  Files are automatically deleted after 1 hour.
+                  Files are automatically deleted after they expire.
                 </p>
                 <Link
                   href="/"

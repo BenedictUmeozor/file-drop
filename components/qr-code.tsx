@@ -14,7 +14,7 @@ export function QRCode({ url, size = 200 }: QRCodeProps) {
         value={url}
         size={size}
         level="M"
-        includeMargin={false}
+        marginSize={0}
         bgColor="#ffffff"
         fgColor="#000000"
       />
