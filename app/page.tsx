@@ -20,10 +20,10 @@ export default function Home() {
             FileDrop
           </span>
         </div>
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-4 sm:gap-6">
           <Link
-            href="#"
-            className="hover:text-primary hidden text-sm font-medium text-slate-500 transition-colors sm:block dark:text-slate-400"
+            href="/how-it-works"
+            className="hover:text-primary text-sm font-medium text-slate-500 transition-colors dark:text-slate-400"
           >
             How it works
           </Link>
@@ -91,7 +91,15 @@ export default function Home() {
       <footer className="relative z-50 w-full px-4 py-8 text-center">
         <div className="flex flex-col items-center gap-4">
           <p className="font-display text-xs text-slate-300 dark:text-slate-600">
-            © 2024 FileDrop Inc.
+            © {new Date().getFullYear()} FileDrop. Made by{" "}
+            <a
+              href="https://github.com/BenedictUmeozor"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-primary transition-colors"
+            >
+              Benedict
+            </a>
           </p>
         </div>
       </footer>

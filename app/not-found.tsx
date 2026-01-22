@@ -60,7 +60,15 @@ export default function NotFound() {
       <footer className="relative z-50 w-full px-4 py-8 text-center">
         <div className="flex flex-col items-center gap-4">
           <p className="font-display text-xs text-slate-300 dark:text-slate-600">
-            © 2024 FileDrop Inc.
+            © {new Date().getFullYear()} FileDrop. Made by{" "}
+            <a
+              href="https://github.com/BenedictUmeozor"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-primary transition-colors"
+            >
+              Benedict
+            </a>
           </p>
         </div>
       </footer>
