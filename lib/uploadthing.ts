@@ -1,15 +1,15 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { nanoid } from "nanoid";
-import { saveFileMetadata, type FileMetadata } from "@/lib/file-metadata";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 
 const f = createUploadthing();
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const EXPIRY_DURATION = 60 * 60 * 1000; // 60 minutes (1 hour) in milliseconds
+const EXPIRY_DURATION = 60 * 60 * 1000;
 const MAX_FILE_SIZE = "256MB";
 
-// FileRouter for the app
 export const uploadRouter = {
-  // File uploader endpoint - accepts any file type up to 200MB
   fileUploader: f({
     blob: {
       maxFileSize: MAX_FILE_SIZE,
@@ -17,11 +17,8 @@ export const uploadRouter = {
     },
   })
     .middleware(async () => {
-      // Generate a unique ID for this upload
       const fileId = nanoid(12);
       const now = Date.now();
-      
-      // Return metadata that will be accessible in onUploadComplete
       return {
         fileId,
         createdAt: now,
@@ -29,13 +26,8 @@ export const uploadRouter = {
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // This runs on the server after upload is complete
-      console.log("Upload complete for fileId:", metadata.fileId);
-      console.log("File URL:", file.ufsUrl);
-
-      // Create file metadata
-      const fileMetadata: FileMetadata = {
-        id: metadata.fileId,
+      await convex.mutation(api.files.saveFile, {
+        fileId: metadata.fileId,
         filename: file.name,
         size: file.size,
         mimetype: file.type || "application/octet-stream",
@@ -43,12 +35,8 @@ export const uploadRouter = {
         expiresAt: metadata.expiresAt,
         uploadThingKey: file.key,
         uploadThingUrl: file.ufsUrl,
-      };
+      });
 
-      // Save metadata to our store
-      saveFileMetadata(fileMetadata);
-
-      // Return the file ID to the client
       return {
         fileId: metadata.fileId,
         filename: file.name,
