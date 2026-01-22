@@ -59,7 +59,8 @@ export default async function SharePage({ params }: PageProps) {
   const metadata = await getFileMetadata(id);
   const headersList = await headers();
   const baseUrl = getBaseUrl(headersList);
-  const downloadUrl = `${baseUrl}/api/download/${id}`;
+  const shareUrl = `${baseUrl}/download/${id}`;
+  const downloadUrl = `/api/download/${id}`;
 
   return (
     <>
@@ -130,22 +131,22 @@ export default async function SharePage({ params }: PageProps) {
 
                 {/* QR Code */}
                 <div className="mb-6 flex justify-center">
-                  <QRCode url={downloadUrl} size={180} />
+                  <QRCode url={shareUrl} size={180} />
                 </div>
 
-                {/* Download Link */}
+                {/* Share Link */}
                 <div className="mb-6">
                   <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Download Link
+                    Share Link
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       readOnly
-                      value={downloadUrl}
+                      value={shareUrl}
                       className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
                     />
-                    <CopyButton text={downloadUrl} />
+                    <CopyButton text={shareUrl} />
                   </div>
                 </div>
 
@@ -183,7 +184,7 @@ export default async function SharePage({ params }: PageProps) {
                 <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
                   This file may have expired or doesn&apos;t exist.
                   <br />
-                  Files are automatically deleted after 10 minutes.
+                  Files are automatically deleted after 1 hour.
                 </p>
                 <Link
                   href="/"

@@ -4,7 +4,7 @@ import { saveFile } from '@/lib/storage';
 import { runCleanup } from '@/lib/cleanup';
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
-const EXPIRY_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const EXPIRY_DURATION = 60 * 60 * 1000; // 60 minutes (1 hour) in milliseconds
 
 export async function POST(request: NextRequest) {
   try {
