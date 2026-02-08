@@ -8,12 +8,14 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="group rounded-lg p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+      className="group relative flex items-center justify-center rounded-full p-2.5 transition-all hover:bg-slate-100 active:scale-95 dark:hover:bg-slate-800"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       aria-label="Toggle theme"
     >
-      <Sun className="group-hover:text-primary h-5 w-5 scale-100 rotate-0 text-slate-500 transition-all dark:scale-0 dark:-rotate-90" />
-      <Moon className="group-hover:text-primary absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 scale-0 rotate-90 text-slate-500 transition-all dark:scale-100 dark:rotate-0" />
+      <div className="grid h-5 w-5 place-items-center">
+        <Sun className="col-start-1 row-start-1 h-5 w-5 scale-100 rotate-0 text-amber-500 transition-all duration-500 dark:scale-0 dark:-rotate-90" />
+        <Moon className="col-start-1 row-start-1 h-5 w-5 scale-0 rotate-90 text-cyan-400 transition-all duration-500 dark:scale-100 dark:rotate-0" />
+      </div>
       <span className="sr-only">Toggle theme</span>
     </button>
   );

@@ -5,10 +5,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import {
   AlertCircle,
   ArrowLeft,
+  Clock,
   CloudUpload,
   Download,
   File,
   Files,
+  Share2,
 } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -80,176 +82,196 @@ export default async function SharePage({ params }: PageProps) {
 
   return (
     <>
-      <header className="relative z-50 flex w-full items-center justify-between border-b border-transparent px-6 py-5 md:px-12">
-        <Link href="/" className="group flex cursor-pointer items-center gap-2">
-          <div className="group-hover:border-primary/50 rounded-lg border border-slate-100 bg-white p-2 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-800">
-            <CloudUpload className="text-primary h-6 w-6" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-            FileDrop
-          </span>
-        </Link>
-        <nav className="flex items-center gap-4 sm:gap-6">
+      <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
+        <div className="bg-background-light dark:bg-background-dark absolute inset-0 transition-colors duration-500" />
+        <div className="bg-grid-pattern absolute inset-0 opacity-[0.6] dark:opacity-[0.4]" />
+
+        <div className="animate-pulse-slow absolute top-[-20%] left-[20%] h-125 w-125 rounded-full bg-cyan-400/20 mix-blend-multiply blur-[120px] dark:bg-cyan-500/10 dark:mix-blend-screen" />
+        <div className="absolute right-[10%] bottom-[-10%] h-150 w-150 rounded-full bg-blue-400/20 mix-blend-multiply blur-[120px] dark:bg-blue-600/10 dark:mix-blend-screen" />
+      </div>
+
+      <header className="fixed top-0 right-0 left-0 z-50 transition-all duration-300">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <Link
-            href="/how-it-works"
-            className="hover:text-primary text-sm font-medium text-slate-500 transition-colors dark:text-slate-400"
+            href="/"
+            className="glass-panel group flex cursor-pointer items-center gap-3 rounded-full px-5 py-2 transition-transform hover:scale-105 active:scale-95"
           >
-            How it works
+            <div className="rounded-lg bg-linear-to-br from-cyan-400 to-blue-600 p-1.5 text-white shadow-lg shadow-cyan-500/20 transition-shadow group-hover:shadow-cyan-500/40">
+              <CloudUpload className="h-5 w-5" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">
+              File<span className="text-cyan-500">Drop</span>
+            </span>
           </Link>
-          <div className="relative h-9 w-9">
+
+          <nav className="glass-panel flex items-center gap-1 rounded-full p-1 px-2">
+            <Link
+              href="/how-it-works"
+              className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              How it works
+            </Link>
+            <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700" />
             <ThemeToggle />
-          </div>
-        </nav>
+          </nav>
+        </div>
       </header>
 
-      <main className="relative flex grow flex-col items-center justify-center overflow-hidden px-4 py-8">
-        <div
-          className="bg-primary/5 dark:bg-primary/10 pointer-events-none absolute top-1/4 -left-20 h-72 w-72 rounded-full mix-blend-multiply blur-[100px] dark:mix-blend-normal"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -right-20 bottom-1/4 h-80 w-80 rounded-full bg-blue-400/5 mix-blend-multiply blur-[100px] dark:bg-blue-500/10 dark:mix-blend-normal"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 flex w-full max-w-lg flex-col gap-6">
+      <main className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-28 pb-12">
+        <div className="animate-fade-in-up relative z-10 flex w-full max-w-2xl flex-col gap-6">
           {metadata ? (
             <>
-              <div className="animate-fade-in-up shadow-soft rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700/50 dark:bg-[#2b3036] dark:shadow-none">
-                <div className="mb-6 text-center">
-                  <div className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    {metadata.fileCount > 1 ? (
-                      <Files className="text-primary h-8 w-8" />
-                    ) : (
-                      <File className="text-primary h-8 w-8" />
-                    )}
-                  </div>
-                  <h1 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                    {metadata.fileCount > 1
-                      ? "Files Ready to Share"
-                      : "File Ready to Share"}
-                  </h1>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Share this link or scan the QR code
-                  </p>
-                </div>
-
-                <div className="mb-6 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Files className="text-primary h-4 w-4" />
-                      <span className="font-medium text-slate-900 dark:text-white">
-                        {metadata.fileCount} file
-                        {metadata.fileCount > 1 ? "s" : ""}
-                      </span>
-                      <span className="text-sm text-slate-400">
-                        ({formatFileSize(metadata.totalSize)})
-                      </span>
+              <div className="glass-panel group relative overflow-hidden rounded-3xl p-1">
+                <div className="absolute -inset-1 rounded-3xl bg-linear-to-r from-cyan-400 to-blue-600 opacity-10 blur transition duration-1000 group-hover:opacity-20" />
+                <div className="relative overflow-hidden rounded-[22px] border border-slate-100 bg-white dark:border-slate-800/50 dark:bg-[#161b22]">
+                  <div className="border-b border-slate-100 bg-slate-50/30 px-8 py-8 text-center dark:border-slate-800 dark:bg-[#1c222b]/50">
+                    <div className="mb-4 inline-flex items-center justify-center rounded-2xl bg-cyan-100 p-3 text-cyan-600 ring-1 ring-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-400">
+                      {metadata.fileCount > 1 ? (
+                        <Files className="h-8 w-8" />
+                      ) : (
+                        <File className="h-8 w-8" />
+                      )}
                     </div>
-                    <CountdownTimer
-                      expiresAt={new Date(metadata.expiresAt).toISOString()}
-                    />
+                    <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                      {metadata.fileCount > 1
+                        ? "Files Ready to Share"
+                        : "File Ready to Share"}
+                    </h1>
+                    <p className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
+                      <Share2 className="h-4 w-4" />
+                      Share this link or scan the QR code
+                    </p>
                   </div>
 
-                  <div className="max-h-32 space-y-2 overflow-y-auto">
-                    {metadata.files.map((file) => (
-                      <div
-                        key={file.fileId}
-                        className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-slate-700/50"
-                      >
-                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                          <File className="h-4 w-4 shrink-0 text-slate-400" />
-                          <span className="truncate text-sm text-slate-700 dark:text-slate-300">
-                            {file.filename}
-                          </span>
+                  <div className="p-8">
+                    <div className="mb-8 flex flex-col gap-6 sm:flex-row">
+                      <div className="flex-1 rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-700/50 dark:bg-slate-800/50">
+                        <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-white p-1.5 text-slate-700 shadow-sm dark:bg-slate-700 dark:text-slate-300">
+                              <Files className="h-4 w-4" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-slate-900 dark:text-white">
+                                {metadata.fileCount} file
+                                {metadata.fileCount > 1 ? "s" : ""}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                {formatFileSize(metadata.totalSize)}
+                              </span>
+                            </div>
+                          </div>
+                          <CountdownTimer
+                            expiresAt={new Date(
+                              metadata.expiresAt,
+                            ).toISOString()}
+                          />
                         </div>
-                        <span className="ml-2 shrink-0 text-xs text-slate-400">
-                          {formatFileSize(file.size)}
+
+                        <div className="custom-scrollbar max-h-48 space-y-2 overflow-y-auto pr-1">
+                          {metadata.files.map((file) => (
+                            <div
+                              key={file.fileId}
+                              className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2 dark:border-slate-700/50 dark:bg-slate-700/30"
+                            >
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
+                                <File className="h-4 w-4 shrink-0 text-cyan-500" />
+                                <span className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
+                                  {file.filename}
+                                </span>
+                              </div>
+                              <span className="ml-3 shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-400 dark:bg-slate-800">
+                                {formatFileSize(file.size)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex min-w-40 flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-800/50">
+                        <div className="mb-2 rounded-xl border border-slate-100 bg-white p-2">
+                          <QRCode url={shareUrl} size={120} />
+                        </div>
+                        <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                          Scan to download
                         </span>
                       </div>
-                    ))}
+                    </div>
+
+                    <div className="mb-8 space-y-3">
+                      <label className="ml-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Secure Share Link
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="group/input relative flex-1">
+                          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Share2 className="h-4 w-4 text-slate-400 transition-colors group-focus-within/input:text-cyan-500" />
+                          </div>
+                          <input
+                            type="text"
+                            readOnly
+                            value={shareUrl}
+                            className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pr-4 pl-10 font-mono text-sm text-slate-600 transition-all focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
+                          />
+                        </div>
+                        <CopyButton text={shareUrl} />
+                      </div>
+                    </div>
+
+                    <a
+                      href={`/api/bundle/${id}/download`}
+                      className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 px-6 py-4 text-center font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.01] hover:shadow-cyan-500/40 active:scale-95"
+                    >
+                      <Download className="h-5 w-5 transition-transform group-hover:-translate-y-1" />
+                      <span>
+                        Download {metadata.fileCount > 1 ? "All Files" : "File"}
+                      </span>
+                    </a>
+
+                    <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+                      <Clock className="h-3 w-3" />
+                      <span>Files auto-delete in 10 minutes</span>
+                    </div>
                   </div>
                 </div>
-
-                <div className="mb-6 flex justify-center">
-                  <QRCode url={shareUrl} size={180} />
-                </div>
-
-                <div className="mb-6">
-                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Share Link
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={shareUrl}
-                      className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                    />
-                    <CopyButton text={shareUrl} />
-                  </div>
-                </div>
-
-                <a
-                  href={`/api/bundle/${id}/download`}
-                  className="bg-primary shadow-primary/25 hover:shadow-glow flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-[#13aba4] active:scale-95"
-                >
-                  <Download className="h-5 w-5" />
-                  Download {metadata.fileCount > 1 ? "All Files" : "File"}
-                </a>
               </div>
 
-              <div className="text-center">
+              <div className="mt-4 text-center">
                 <Link
                   href="/"
-                  className="hover:text-primary inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors dark:text-slate-400"
+                  className="group inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400"
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                   Share more files
                 </Link>
               </div>
             </>
           ) : (
-            <div className="animate-fade-in-up shadow-soft rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700/50 dark:bg-[#2b3036] dark:shadow-none">
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
-                  <AlertCircle className="h-8 w-8 text-red-500" />
-                </div>
-                <h1 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  Files Not Found
-                </h1>
-                <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-                  These files may have expired or don&apos;t exist.
-                  <br />
-                  Files are automatically deleted after they expire.
-                </p>
-                <Link
-                  href="/"
-                  className="bg-primary shadow-primary/25 hover:shadow-glow inline-flex items-center gap-2 rounded-lg px-6 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-[#13aba4] active:scale-95"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Upload New Files
-                </Link>
+            <div className="glass-panel mx-auto max-w-lg rounded-3xl border border-red-100 p-8 text-center dark:border-red-900/30">
+              <div className="mb-6 inline-flex items-center justify-center rounded-full bg-red-100 p-4 text-red-500 ring-8 ring-red-50 dark:bg-red-500/10 dark:ring-red-500/5">
+                <AlertCircle className="h-10 w-10" />
               </div>
+              <h1 className="mb-2 text-2xl font-bold text-slate-900 dark:text-white">
+                Files Not Found
+              </h1>
+              <p className="mx-auto mb-8 max-w-sm text-slate-500 dark:text-slate-400">
+                These files may have expired or been deleted. Links are one-time
+                use or time-limited for security.
+              </p>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-8 py-3.5 font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 dark:bg-white dark:text-slate-900"
+              >
+                <CloudUpload className="h-4 w-4" />
+                Share Your Own Files
+              </Link>
             </div>
           )}
         </div>
       </main>
 
-      <footer className="relative z-50 w-full px-4 py-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <p className="font-display text-xs text-slate-300 dark:text-slate-600">
-            © {new Date().getFullYear()} FileDrop. Made by{" "}
-            <a
-              href="https://github.com/BenedictUmeozor"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary underline transition-colors"
-            >
-              Benedict
-            </a>
-          </p>
-        </div>
+      <footer className="relative z-10 w-full py-8 text-center text-sm text-slate-400 dark:text-slate-600">
+        <p>© {new Date().getFullYear()} FileDrop. Secure File Transfer.</p>
       </footer>
     </>
   );
