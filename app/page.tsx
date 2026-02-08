@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { UploadZone, EXPIRY_OPTIONS } from "@/components/upload-zone";
+import { EXPIRY_OPTIONS, UploadZone } from "@/components/upload-zone";
 import { CloudUpload, Info } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
-  const [expiryLabel, setExpiryLabel] = useState<string>(EXPIRY_OPTIONS[0].label);
+  const [expiryLabel, setExpiryLabel] = useState<string>(
+    EXPIRY_OPTIONS[0].label,
+  );
 
   return (
     <>
@@ -65,7 +67,7 @@ export default function Home() {
               </span>
             </h1>
             <p className="mx-auto max-w-md text-lg leading-relaxed text-slate-500 dark:text-slate-400">
-              Share files instantly without an account.{" "}
+              Share up to 10 files instantly without an account.{" "}
               <br className="hidden sm:block" />
               Secure, fast, and disappearing in 10 minutes.
             </p>
@@ -96,7 +98,7 @@ export default function Home() {
               href="https://github.com/BenedictUmeozor"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-primary transition-colors"
+              className="hover:text-primary underline transition-colors"
             >
               Benedict
             </a>

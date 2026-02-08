@@ -1,9 +1,10 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 export const saveFile = mutation({
   args: {
     fileId: v.string(),
+    bundleId: v.string(),
     filename: v.string(),
     size: v.number(),
     mimetype: v.string(),
@@ -15,6 +16,7 @@ export const saveFile = mutation({
   handler: async (ctx, args) => {
     const id = await ctx.db.insert("files", {
       fileId: args.fileId,
+      bundleId: args.bundleId,
       filename: args.filename,
       size: args.size,
       mimetype: args.mimetype,
@@ -24,6 +26,48 @@ export const saveFile = mutation({
       uploadThingUrl: args.uploadThingUrl,
     });
     return id;
+  },
+});
+
+export const createBundle = mutation({
+  args: {
+    bundleId: v.string(),
+    fileCount: v.number(),
+    totalSize: v.number(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const id = await ctx.db.insert("bundles", {
+      bundleId: args.bundleId,
+      fileCount: args.fileCount,
+      totalSize: args.totalSize,
+      createdAt: args.createdAt,
+      expiresAt: args.expiresAt,
+    });
+    return id;
+  },
+});
+
+export const getBundle = query({
+  args: { bundleId: v.string() },
+  handler: async (ctx, args) => {
+    const bundle = await ctx.db
+      .query("bundles")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .first();
+    return bundle;
+  },
+});
+
+export const getBundleFiles = query({
+  args: { bundleId: v.string() },
+  handler: async (ctx, args) => {
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .collect();
+    return files;
   },
 });
 
@@ -54,6 +98,34 @@ export const deleteFile = mutation({
   },
 });
 
+export const deleteBundle = mutation({
+  args: { bundleId: v.string() },
+  handler: async (ctx, args) => {
+    const bundle = await ctx.db
+      .query("bundles")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .first();
+
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .collect();
+
+    const uploadThingKeys: string[] = [];
+
+    for (const file of files) {
+      uploadThingKeys.push(file.uploadThingKey);
+      await ctx.db.delete(file._id);
+    }
+
+    if (bundle) {
+      await ctx.db.delete(bundle._id);
+    }
+
+    return { deleted: true, uploadThingKeys };
+  },
+});
+
 export const getExpiredFiles = query({
   args: {},
   handler: async (ctx) => {
@@ -67,8 +139,28 @@ export const getExpiredFiles = query({
   },
 });
 
+export const getExpiredBundles = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const expiredBundles = await ctx.db
+      .query("bundles")
+      .withIndex("by_expiresAt")
+      .filter((q) => q.lt(q.field("expiresAt"), now))
+      .collect();
+    return expiredBundles;
+  },
+});
+
 export const deleteExpiredFile = internalMutation({
   args: { id: v.id("files") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
+export const deleteExpiredBundle = internalMutation({
+  args: { id: v.id("bundles") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
