@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./providers";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -20,9 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={poppins.variable} suppressHydrationWarning>
       <body
-        className={`${spaceGrotesk.variable} bg-background-light dark:bg-background-dark font-display selection:bg-primary/20 selection:text-primary flex min-h-screen flex-col text-slate-900 antialiased dark:text-white`}
+        className={`${poppins.className} bg-background-light dark:bg-background-dark selection:bg-primary/20 selection:text-primary flex min-h-screen flex-col font-sans text-slate-900 antialiased dark:text-white`}
       >
         <ThemeProvider
           attribute="class"

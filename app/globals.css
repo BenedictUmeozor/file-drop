@@ -2,8 +2,8 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: var(--font-space-grotesk);
-  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-poppins);
+  --font-display: var(--font-poppins);
 
   --color-primary: #15bcb4;
   --color-background-light: #f8fafb;
