@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { deleteUploadThingFiles } from "@/lib/utapi";
+import { ConvexHttpClient } from "convex/browser";
+import { NextRequest, NextResponse } from "next/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -9,27 +9,47 @@ export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
+    const isProxyTrigger = request.headers.get("x-cleanup-trigger") === "proxy";
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (
+      cronSecret &&
+      !isProxyTrigger &&
+      authHeader !== `Bearer ${cronSecret}`
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let deletedFilesCount = 0;
+    let deletedBundlesCount = 0;
+    const allUploadThingKeys: string[] = [];
+
+    const expiredBundles = await convex.query(api.files.getExpiredBundles, {});
+
+    for (const bundle of expiredBundles) {
+      const result = await convex.mutation(api.files.deleteBundle, {
+        bundleId: bundle.bundleId,
+      });
+      allUploadThingKeys.push(...result.uploadThingKeys);
+      deletedFilesCount += result.uploadThingKeys.length;
+      deletedBundlesCount++;
     }
 
     const expiredFiles = await convex.query(api.files.getExpiredFiles, {});
 
-    if (expiredFiles.length === 0) {
-      return NextResponse.json({ message: "No expired files", deletedCount: 0 });
+    for (const file of expiredFiles) {
+      allUploadThingKeys.push(file.uploadThingKey);
+      await convex.mutation(api.files.deleteFile, { fileId: file.fileId });
+      deletedFilesCount++;
     }
 
-    const uploadThingKeys = expiredFiles.map((file) => file.uploadThingKey);
-    await deleteUploadThingFiles(uploadThingKeys);
-
-    for (const file of expiredFiles) {
-      await convex.mutation(api.files.deleteFile, { fileId: file.fileId });
+    if (allUploadThingKeys.length > 0) {
+      await deleteUploadThingFiles(allUploadThingKeys);
     }
 
     return NextResponse.json({
       message: "Cleanup completed",
-      deletedCount: expiredFiles.length,
+      deletedBundles: deletedBundlesCount,
+      deletedFiles: deletedFilesCount,
     });
   } catch (error) {
     console.error("[Cleanup] Error:", error);

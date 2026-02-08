@@ -61,7 +61,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
   const createBundle = useMutation(api.files.createBundle);
 
-  const { startUpload, isUploading } = useUploadThing("fileUploader", {
+  const { startUpload } = useUploadThing("fileUploader", {
     onUploadProgress: (progress) => {
       setUploadProgress(progress);
     },
@@ -70,25 +70,69 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         const bundleId = res[0].serverData.bundleId;
         const totalSize = res.reduce((sum, r) => sum + r.serverData.size, 0);
 
-        await createBundle({
-          bundleId,
-          fileCount: res.length,
-          totalSize,
-          createdAt: Date.now(),
-          expiresAt: res[0].serverData.expiresAt,
-        });
+        try {
+          await createBundle({
+            bundleId,
+            fileCount: res.length,
+            totalSize,
+            createdAt: Date.now(),
+            expiresAt: res[0].serverData.expiresAt,
+          });
 
-        setUploadState("success");
-        setUploadProgress(100);
+          setUploadState("success");
+          setUploadProgress(100);
 
-        setTimeout(() => {
-          router.push(`/share/${bundleId}`);
-        }, 500);
+          setTimeout(() => {
+            router.push(`/share/${bundleId}`);
+          }, 500);
+        } catch (err) {
+          console.error("Bundle creation error:", err);
+          setErrorMessage(
+            "Files uploaded but failed to create share link. Please try again.",
+          );
+          setUploadState("error");
+        }
       }
     },
     onUploadError: (error) => {
       console.error("Upload error:", error);
-      setErrorMessage(error.message || "Upload failed");
+
+      const errorMsg = error.message?.toLowerCase() || "";
+      let userMessage = "Upload failed. Please try again.";
+
+      if (errorMsg.includes("file size") || errorMsg.includes("too large")) {
+        userMessage = "Total file size exceeds the 200MB limit.";
+      } else if (
+        errorMsg.includes("file count") ||
+        errorMsg.includes("too many")
+      ) {
+        userMessage = "You can only upload up to 10 files at once.";
+      } else if (
+        errorMsg.includes("rate limit") ||
+        errorMsg.includes("too many requests")
+      ) {
+        userMessage = "Too many uploads. Please wait a moment and try again.";
+      } else if (
+        errorMsg.includes("quota") ||
+        errorMsg.includes("storage limit")
+      ) {
+        userMessage = "Storage limit reached. Please try again later.";
+      } else if (
+        errorMsg.includes("file type") ||
+        errorMsg.includes("not allowed")
+      ) {
+        userMessage = "One or more file types are not supported.";
+      } else if (
+        errorMsg.includes("network") ||
+        errorMsg.includes("connection")
+      ) {
+        userMessage =
+          "Network error. Please check your connection and try again.";
+      } else if (error.message) {
+        userMessage = error.message;
+      }
+
+      setErrorMessage(userMessage);
       setUploadState("error");
     },
     onUploadBegin: () => {
@@ -103,14 +147,8 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     }
 
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    if (totalSize > MAX_FILE_SIZE * MAX_FILE_COUNT) {
-      return `Total file size exceeds the maximum limit.`;
-    }
-
-    for (const file of files) {
-      if (file.size > MAX_FILE_SIZE) {
-        return `"${file.name}" exceeds the maximum file size of 200MB.`;
-      }
+    if (totalSize > MAX_FILE_SIZE) {
+      return `Total file size exceeds 200MB. Current total: ${formatFileSize(totalSize)}.`;
     }
 
     return null;
@@ -245,6 +283,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
       case "ready":
         const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
+        const isNearLimit = totalSize / MAX_FILE_SIZE > 0.8;
         return (
           <div className="w-full">
             <div className="mb-4 flex items-center justify-between">
@@ -254,8 +293,10 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                   {selectedFiles.length} file
                   {selectedFiles.length > 1 ? "s" : ""} selected
                 </span>
-                <span className="text-sm text-slate-400">
-                  ({formatFileSize(totalSize)})
+                <span
+                  className={`text-sm ${isNearLimit ? "text-amber-500" : "text-slate-400"}`}
+                >
+                  ({formatFileSize(totalSize)} / 200MB)
                 </span>
               </div>
               <button
@@ -436,7 +477,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
               Drag & drop files here
             </h2>
             <p className="mb-2 text-sm font-medium text-slate-400 dark:text-slate-500">
-              Up to {MAX_FILE_COUNT} files, max 200MB each
+              Up to {MAX_FILE_COUNT} files, max 200MB total
             </p>
 
             <div

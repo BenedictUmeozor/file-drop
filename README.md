@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📤 FileDrop
 
-## Getting Started
+**Instant, temporary file sharing — no account required.**
 
-First, run the development server:
+> Share up to 10 files at once with a single link or QR code. Files auto-expire for privacy.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+🔗 **Live Demo:** [Coming Soon](#)
+
+---
+
+## ✨ Features
+
+- **Multi-file Upload** — Share up to 10 files (200MB total) in one go
+- **Zero Authentication** — No sign-up, no login, just upload and share
+- **QR Code Sharing** — Scan to download on any device
+- **Auto-Expiry** — Files automatically delete after 10, 30, or 60 minutes
+- **Bulk Download** — Download all files as a ZIP or individually
+- **Mobile-First** — Works seamlessly on phones, tablets, and desktops
+- **Dark Mode** — Automatic theme switching
+
+---
+
+## 🛠️ Tech Stack
+
+| Category     | Technology                                     |
+| ------------ | ---------------------------------------------- |
+| Framework    | [Next.js 16](https://nextjs.org/) (App Router) |
+| Styling      | [Tailwind CSS 4](https://tailwindcss.com/)     |
+| Database     | [Convex](https://convex.dev/)                  |
+| File Storage | [UploadThing](https://uploadthing.com/)        |
+| Deployment   | [Vercel](https://vercel.com/)                  |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm, yarn, or pnpm
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/yourusername/file-drop.git
+   cd file-drop
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Create a `.env.local` file:
+
+   ```env
+   NEXT_PUBLIC_CONVEX_URL=your_convex_url
+   UPLOADTHING_TOKEN=your_uploadthing_token
+   CRON_SECRET=your_cron_secret
+   ```
+
+4. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+5. **Start Convex (in a separate terminal)**
+   ```bash
+   npx convex dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+---
+
+## 📁 Project Structure
+
+```
+file-drop/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes (upload, download, cleanup)
+│   ├── share/[id]/        # Share page with QR code
+│   └── download/[id]/     # Download page
+├── components/            # React components
+├── convex/                # Convex backend (schema, mutations, queries)
+├── lib/                   # Utilities (UploadThing config)
+└── public/                # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔒 How It Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Upload** — Drag & drop or select up to 10 files
+2. **Share** — Get a unique link and QR code
+3. **Download** — Recipients can download individually or as a ZIP
+4. **Auto-Delete** — Files are automatically purged after expiry
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📜 License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+MIT License — feel free to use this project for personal or commercial purposes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 👤 Author
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made with ❤️ by [Benedict](https://github.com/BenedictUmeozor)
