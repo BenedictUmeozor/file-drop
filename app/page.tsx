@@ -1,9 +1,10 @@
 "use client";
 
-import { ThemeToggle } from "@/components/theme-toggle";
+import { BackgroundDecorations } from "@/components/background-decorations";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
 import { EXPIRY_OPTIONS, UploadZone } from "@/components/upload-zone";
-import { CloudUpload, Github, Shield, Zap } from "lucide-react";
-import Link from "next/link";
+import { Shield, Zap } from "lucide-react";
 import { useState } from "react";
 
 export default function Home() {
@@ -13,37 +14,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden">
-        <div className="bg-background-light dark:bg-background-dark absolute inset-0 transition-colors duration-500" />
-        <div className="bg-grid-pattern absolute inset-0 opacity-[0.6] dark:opacity-[0.4]" />
-
-        <div className="animate-pulse-slow absolute top-[-20%] left-[20%] h-125 w-125 rounded-full bg-cyan-400/20 mix-blend-multiply blur-[120px] dark:bg-cyan-500/10 dark:mix-blend-screen" />
-        <div className="absolute right-[10%] bottom-[-10%] h-150 w-150 rounded-full bg-blue-400/20 mix-blend-multiply blur-[120px] dark:bg-blue-600/10 dark:mix-blend-screen" />
-      </div>
-
-      <header className="fixed top-0 right-0 left-0 z-50 transition-all duration-300">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-          <div className="glass-panel flex items-center gap-3 rounded-full px-5 py-2">
-            <div className="rounded-lg bg-linear-to-br from-cyan-400 to-blue-600 p-1.5 text-white shadow-lg shadow-cyan-500/20">
-              <CloudUpload className="h-5 w-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">
-              File<span className="text-cyan-500">Drop</span>
-            </span>
-          </div>
-
-          <nav className="glass-panel flex items-center gap-1 rounded-full p-1 px-2">
-            <Link
-              href="/how-it-works"
-              className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              How it works
-            </Link>
-            <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700" />
-            <ThemeToggle />
-          </nav>
-        </div>
-      </header>
+      <BackgroundDecorations />
+      <Header />
 
       <main className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-12 selection:bg-cyan-500/20">
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-center gap-12 lg:flex-row lg:gap-20">
@@ -114,30 +86,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="relative z-10 w-full py-8 text-center text-sm text-slate-400 dark:text-slate-600">
-        <div className="mb-4 flex items-center justify-center gap-6">
-          <Link href="#" className="transition-colors hover:text-cyan-500">
-            Terms
-          </Link>
-          <Link href="#" className="transition-colors hover:text-cyan-500">
-            Privacy
-          </Link>
-          <Link href="#" className="transition-colors hover:text-cyan-500">
-            Security
-          </Link>
-        </div>
-        <p className="flex items-center justify-center gap-1">
-          © {new Date().getFullYear()} FileDrop. Crafted by
-          <a
-            href="https://github.com/BenedictUmeozor"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-1 inline-flex items-center gap-1 font-medium text-slate-600 transition-colors hover:text-cyan-500 dark:text-slate-400 dark:hover:text-cyan-400"
-          >
-            Benedict <Github className="h-3 w-3" />
-          </a>
-        </p>
-      </footer>
+      <Footer variant="full" />
     </>
   );
 }

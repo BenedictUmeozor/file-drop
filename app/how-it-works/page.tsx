@@ -1,32 +1,47 @@
 "use client";
 
-import { ThemeToggle } from "@/components/theme-toggle";
-import { CloudUpload, Upload, Share2, Download, Clock, Zap, QrCode, Smartphone, Shield, HardDrive } from "lucide-react";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
+import {
+  Clock,
+  Download,
+  HardDrive,
+  QrCode,
+  Share2,
+  Shield,
+  Smartphone,
+  Upload,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 
 const steps = [
   {
     number: 1,
     title: "Upload your file",
-    description: "Drag and drop your file or click to browse. Supports all common formats up to 200MB.",
+    description:
+      "Drag and drop your file or click to browse. Supports all common formats up to 200MB.",
     icon: Upload,
   },
   {
     number: 2,
     title: "Share the link or QR code",
-    description: "Get an instant shareable link and QR code. Send it via any messaging app or let others scan it.",
+    description:
+      "Get an instant shareable link and QR code. Send it via any messaging app or let others scan it.",
     icon: Share2,
   },
   {
     number: 3,
     title: "Recipient downloads",
-    description: "Anyone with the link can download the file instantly. No account or app required.",
+    description:
+      "Anyone with the link can download the file instantly. No account or app required.",
     icon: Download,
   },
   {
     number: 4,
     title: "File auto-expires",
-    description: "Your file is automatically deleted after the expiry time for privacy and security.",
+    description:
+      "Your file is automatically deleted after the expiry time for privacy and security.",
     icon: Clock,
   },
 ];
@@ -62,30 +77,9 @@ const features = [
 export default function HowItWorks() {
   return (
     <>
-      <header className="relative z-50 flex w-full items-center justify-between border-b border-transparent px-6 py-5 md:px-12">
-        <Link href="/" className="group flex cursor-pointer items-center gap-2">
-          <div className="group-hover:border-primary/50 rounded-lg border border-slate-100 bg-white p-2 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-800">
-            <CloudUpload className="text-primary h-6 w-6" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-            FileDrop
-          </span>
-        </Link>
-        <nav className="flex items-center gap-4 sm:gap-6">
-          <Link
-            href="/how-it-works"
-            className="text-primary text-sm font-medium transition-colors"
-          >
-            How it works
-          </Link>
-          <div className="relative h-9 w-9">
-            <ThemeToggle />
-          </div>
-        </nav>
-      </header>
+      <Header />
 
-      <main className="relative flex grow flex-col items-center overflow-hidden px-4 py-12 md:py-16">
-        {/* Background decorations */}
+      <main className="relative flex grow flex-col items-center overflow-hidden px-4 py-12 pt-24 md:py-16 md:pt-28">
         <div
           className="bg-primary/5 dark:bg-primary/10 pointer-events-none absolute top-1/4 -left-20 h-72 w-72 rounded-full mix-blend-multiply blur-[100px] dark:mix-blend-normal"
           aria-hidden="true"
@@ -96,7 +90,6 @@ export default function HowItWorks() {
         />
 
         <div className="relative z-10 flex w-full max-w-4xl flex-col gap-16">
-          {/* Page Heading */}
           <div className="animate-fade-in-up space-y-4 text-center">
             <h1 className="text-4xl leading-[1.1] font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
               How it{" "}
@@ -121,7 +114,6 @@ export default function HowItWorks() {
             </p>
           </div>
 
-          {/* Steps Section */}
           <div className="grid gap-6 md:grid-cols-2">
             {steps.map((step, index) => (
               <div
@@ -151,7 +143,6 @@ export default function HowItWorks() {
             ))}
           </div>
 
-          {/* Features Section */}
           <div className="space-y-8">
             <h2 className="text-center text-2xl font-bold text-slate-900 dark:text-white">
               Why FileDrop?
@@ -178,7 +169,6 @@ export default function HowItWorks() {
             </div>
           </div>
 
-          {/* CTA Section */}
           <div className="flex flex-col items-center gap-4 text-center">
             <p className="text-slate-500 dark:text-slate-400">
               Ready to share your first file?
@@ -194,22 +184,7 @@ export default function HowItWorks() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-50 w-full px-4 py-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <p className="font-display text-xs text-slate-300 dark:text-slate-600">
-            © {new Date().getFullYear()} FileDrop. Made by{" "}
-            <a
-              href="https://github.com/BenedictUmeozor"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-primary transition-colors"
-            >
-              Benedict
-            </a>
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
