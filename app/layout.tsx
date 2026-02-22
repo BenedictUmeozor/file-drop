@@ -12,7 +12,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "FileDrop - Instant File Sharing",
   description:
-    "Share files instantly without an account. Secure, fast, and disappearing in 10 minutes.",
+    "Share files instantly with automatic expiry. No account needed.",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={poppins.variable} suppressHydrationWarning>
       <body
-        className={`${poppins.className} bg-background-light dark:bg-background-dark flex min-h-screen flex-col font-sans text-slate-900 antialiased selection:bg-cyan-500/30 selection:text-cyan-600 dark:text-white dark:selection:text-cyan-400`}
+        className={`${poppins.className} bg-background-light dark:bg-background-dark flex min-h-screen flex-col font-sans text-slate-900 antialiased selection:bg-primary/20 selection:text-primary dark:text-white dark:selection:text-primary-light`}
       >
         <ThemeProvider
           attribute="class"

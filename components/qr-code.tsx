@@ -9,7 +9,7 @@ interface QRCodeProps {
 
 export function QRCode({ url, size = 200 }: QRCodeProps) {
   return (
-    <div className="inline-flex rounded-xl bg-white p-4 shadow-sm">
+    <div className="inline-flex rounded-xl bg-white border border-gray-200 p-4">
       <QRCodeSVG
         value={url}
         size={size}

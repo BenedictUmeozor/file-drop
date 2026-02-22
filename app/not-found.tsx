@@ -1,77 +1,58 @@
-import { ThemeToggle } from "@/components/theme-toggle";
 import { CloudUpload, FileQuestion, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <>
-      <header className="relative z-50 flex w-full items-center justify-between border-b border-transparent px-6 py-5 md:px-12">
-        <Link href="/" className="group flex cursor-pointer items-center gap-2">
-          <div className="rounded-lg border border-slate-100 bg-white p-2 shadow-sm transition-colors group-hover:border-primary/50 dark:border-slate-700 dark:bg-slate-800">
-            <CloudUpload className="h-6 w-6 text-primary" />
+    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-slate-900">
+      <header className="flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6 dark:border-slate-800 dark:bg-slate-900">
+        <Link
+          href="/"
+          className="group flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-slate-800"
+        >
+          <div className="rounded-lg bg-primary p-1.5 text-white shadow-sm transition-transform group-hover:scale-105">
+            <CloudUpload className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-            FileDrop
+          <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+            File<span className="text-primary">Drop</span>
           </span>
         </Link>
-        <nav className="flex items-center gap-6">
-          <div className="relative h-9 w-9">
-            <ThemeToggle />
-          </div>
-        </nav>
       </header>
 
-      <main className="relative flex grow flex-col items-center justify-center overflow-hidden px-4 py-8">
-        <div
-          className="pointer-events-none absolute -left-20 top-1/4 h-72 w-72 rounded-full bg-primary/5 mix-blend-multiply blur-[100px] dark:bg-primary/10 dark:mix-blend-normal"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -right-20 bottom-1/4 h-80 w-80 rounded-full bg-blue-400/5 mix-blend-multiply blur-[100px] dark:bg-blue-500/10 dark:mix-blend-normal"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 flex w-full max-w-lg flex-col gap-6">
-          <div className="animate-fade-in-up rounded-2xl border border-slate-100 bg-white p-8 shadow-soft dark:border-slate-700/50 dark:bg-[#2b3036] dark:shadow-none">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-500/10">
-                <FileQuestion className="h-8 w-8 text-slate-500" />
-              </div>
-              <h1 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Page Not Found
-              </h1>
-              <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-                Sorry, we couldn&apos;t find the page you&apos;re looking for.
-                <br />
-                It may have been moved or deleted.
-              </p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3.5 font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-[#13aba4] hover:shadow-glow active:scale-95"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Home
-              </Link>
-            </div>
+      <main className="flex grow flex-col items-center justify-center p-4">
+        <div className="flex w-full max-w-md flex-col text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100 dark:bg-slate-800">
+            <FileQuestion className="h-10 w-10 text-gray-500 dark:text-gray-400" />
           </div>
+          <h1 className="mb-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Page Not Found
+          </h1>
+          <p className="mb-8 text-base text-gray-500 dark:text-gray-400">
+            Sorry, we couldn&apos;t find the page you&apos;re looking for. It
+            may have been moved or deleted.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-bold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            Back to Home
+          </Link>
         </div>
       </main>
 
-      <footer className="relative z-50 w-full px-4 py-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <p className="font-display text-xs text-slate-300 dark:text-slate-600">
-            © {new Date().getFullYear()} FileDrop. Made by{" "}
-            <a
-              href="https://github.com/BenedictUmeozor"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-primary transition-colors"
-            >
-              Benedict
-            </a>
-          </p>
-        </div>
+      <footer className="w-full py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>
+          © {new Date().getFullYear()} FileDrop. Made by{" "}
+          <a
+            href="https://github.com/BenedictUmeozor"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors"
+          >
+            Benedict
+          </a>
+        </p>
       </footer>
-    </>
+    </div>
   );
 }

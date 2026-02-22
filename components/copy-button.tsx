@@ -26,8 +26,8 @@ export function CopyButton({ text, className = "" }: CopyButtonProps) {
       onClick={handleCopy}
       className={`relative inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all active:scale-95 ${
         copied
-          ? "border-green-600 bg-green-500 text-white shadow-md shadow-green-500/20 dark:border-green-400"
-          : "border-slate-200 bg-slate-100 text-slate-700 hover:border-cyan-500/50 hover:bg-white hover:text-cyan-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-cyan-400"
+          ? "border-green-600 bg-green-500 text-white shadow-sm dark:border-green-400"
+          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 shadow-sm dark:border-gray-700 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
       } ${className}`}
     >
       {copied ? (

@@ -43,3 +43,6 @@ next-env.d.ts
 # uploads (keep directory but ignore contents)
 /uploads/*
 !/uploads/.gitkeep
+scout
+plans
+research

@@ -37,10 +37,10 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
 
   return (
     <div
-      className={`flex items-center gap-2 text-sm font-medium ${
+      className={`flex items-center gap-2 rounded-lg border px-2 py-1 text-sm font-medium ${
         isExpired
-          ? "text-red-500"
-          : "text-slate-500 dark:text-slate-400"
+          ? "border-red-300 bg-red-100 text-red-500 dark:border-red-800 dark:bg-red-900/20"
+          : "border-red-200 bg-red-50 text-red-600 dark:border-red-800/50 dark:bg-red-900/10 dark:text-red-400"
       }`}
     >
       <Clock className="h-4 w-4" />

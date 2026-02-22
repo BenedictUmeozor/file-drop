@@ -9,7 +9,6 @@ import {
   CloudUpload,
   File,
   Files,
-  FolderOpen,
   Loader2,
   Trash2,
   Upload,
@@ -241,18 +240,14 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     switch (uploadState) {
       case "dragging":
         return (
-          <>
-            <div className="relative mb-6">
-              <div className="bg-primary/30 absolute inset-0 scale-150 rounded-full blur-xl" />
-              <Upload className="text-primary relative z-10 h-16 w-16 animate-bounce" />
+          <div className="flex flex-col items-center justify-center py-10">
+            <div className="mb-4 rounded-full bg-primary/10 p-4">
+              <Upload className="h-8 w-8 text-primary animate-bounce" />
             </div>
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Drop it like it&apos;s hot!
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Drop files here
             </h2>
-            <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
-              Release to add your files (up to {MAX_FILE_COUNT})
-            </p>
-          </>
+          </div>
         );
 
       case "ready":
@@ -260,15 +255,14 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         const isNearLimit = totalSize / MAX_FILE_SIZE > 0.8;
         return (
           <div className="w-full">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-700">
               <div className="flex items-center gap-2">
-                <Files className="text-primary h-5 w-5" />
-                <span className="font-medium text-slate-900 dark:text-white">
-                  {selectedFiles.length} file
-                  {selectedFiles.length > 1 ? "s" : ""} selected
+                <Files className="h-4 w-4 text-gray-500" />
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""}
                 </span>
                 <span
-                  className={`text-sm ${isNearLimit ? "text-amber-500" : "text-slate-400"}`}
+                  className={`text-sm ${isNearLimit ? "text-amber-500" : "text-gray-400"}`}
                 >
                   ({formatFileSize(totalSize)} / 200MB)
                 </span>
@@ -278,31 +272,34 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                   e.stopPropagation();
                   resetUpload();
                 }}
-                className="text-sm text-slate-400 transition-colors hover:text-red-500"
+                className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+                type="button"
               >
                 Clear all
               </button>
             </div>
 
-            <div className="mb-4 max-h-40 space-y-2 overflow-y-auto">
+            <div className="mb-4 max-h-48 space-y-1 overflow-y-auto">
               {selectedFiles.map((file, index) => (
                 <div
                   key={`${file.name}-${index}`}
-                  className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800"
+                  className="group flex items-center justify-between rounded-md p-2 hover:bg-gray-50 dark:hover:bg-slate-800"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <File className="text-primary h-4 w-4 shrink-0" />
-                    <span className="truncate text-sm text-slate-700 dark:text-slate-300">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <File className="h-4 w-4 text-gray-400" />
+                    <span className="truncate text-sm text-gray-700 dark:text-gray-300">
                       {file.name}
                     </span>
-                    <span className="shrink-0 text-xs text-slate-400">
-                      ({formatFileSize(file.size)})
+                    <span className="shrink-0 text-xs text-gray-400">
+                      {formatFileSize(file.size)}
                     </span>
                   </div>
                   <button
                     onClick={() => removeFile(index)}
-                    className="ml-2 p-1 text-slate-400 transition-colors hover:text-red-500"
+                    className="ml-2 opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                    type="button"
+                    aria-label={`Remove ${file.name}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -316,167 +313,24 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                   e.stopPropagation();
                   open();
                 }}
-                className="hover:border-primary hover:text-primary mb-4 w-full rounded-lg border-2 border-dashed border-slate-200 py-2 text-sm text-slate-400 transition-colors dark:border-slate-700"
+                className="mb-6 w-full rounded-lg border border-dashed border-gray-300 py-2 text-sm text-gray-500 hover:border-primary hover:text-primary transition-colors dark:border-gray-600"
+                type="button"
               >
-                + Add more files ({MAX_FILE_COUNT - selectedFiles.length}{" "}
-                remaining)
+                + Add more files
               </button>
             )}
 
-            <div
-              className="mb-4 flex items-center justify-center gap-2"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                Expires in:
-              </span>
-              <select
-                value={expiryDuration}
-                onChange={(e) => {
-                  const newValue = Number(e.target.value);
-                  setExpiryDuration(newValue);
-                  const option = EXPIRY_OPTIONS.find(
-                    (opt) => opt.value === newValue,
-                  );
-                  if (option && onExpiryChange) {
-                    onExpiryChange(option.label);
-                  }
-                }}
-                className="hover:border-primary focus:border-primary focus:ring-primary/20 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors focus:ring-2 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-              >
-                {EXPIRY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                startFilesUpload();
-              }}
-              className="mt-4 w-full rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 px-8 py-3.5 font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] hover:shadow-cyan-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <CloudUpload className="mr-2 inline-block h-5 w-5" />
-              Upload {selectedFiles.length} File
-              {selectedFiles.length > 1 ? "s" : ""}
-            </button>
-          </div>
-        );
-
-      case "uploading":
-        return (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-xl" />
-              <Loader2 className="relative z-10 h-16 w-16 animate-spin text-cyan-500" />
-            </div>
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Uploading... {uploadProgress}%
-            </h2>
-            <div className="mb-8 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <Files className="h-4 w-4" />
-              <span>
-                {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""}
-              </span>
-              <span className="text-slate-400 dark:text-slate-500">
-                (
-                {formatFileSize(
-                  selectedFiles.reduce((sum, f) => sum + f.size, 0),
-                )}
-                )
-              </span>
-            </div>
-            <div className="h-1.5 w-64 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700">
               <div
-                className="h-full rounded-full bg-linear-to-r from-cyan-500 to-blue-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-300 ease-out"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
-        );
-
-      case "success":
-        return (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 scale-150 rounded-full bg-green-500/20 blur-xl" />
-              <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-green-500 shadow-lg shadow-green-500/30">
-                <Check className="h-8 w-8 text-white" />
-              </div>
-            </div>
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Transfer Complete
-            </h2>
-            <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
-              Creating your secure link...
-            </p>
-          </div>
-        );
-
-      case "error":
-        return (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 scale-150 rounded-full bg-red-500/20 blur-xl" />
-              <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-red-500 shadow-lg shadow-red-500/30">
-                <X className="h-8 w-8 text-white" />
-              </div>
-            </div>
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Upload Failed
-            </h2>
-            <p className="mb-6 max-w-sm rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-red-500/90 dark:border-red-900/20 dark:bg-red-900/10">
-              {errorMessage}
-            </p>
-            <button
-              onClick={resetUpload}
-              className="z-20 flex items-center gap-2 rounded-lg bg-slate-900 px-8 py-3 font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95 dark:bg-white dark:text-slate-900"
-            >
-              Try Again
-            </button>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="flex flex-col items-center justify-center py-10">
-            <div className="relative mb-6 transition-transform duration-300 group-hover:scale-110">
-              <div className="absolute inset-0 scale-110 rounded-full bg-cyan-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-              <div className="relative z-10 rounded-full border border-slate-100 bg-slate-50 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                <CloudUpload className="h-10 w-10 text-cyan-500" />
-              </div>
-            </div>
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-800 dark:text-white">
-              Drag & drop files
-            </h2>
-            <p className="mb-6 text-sm font-medium text-slate-400 dark:text-slate-500">
-              Up to {MAX_FILE_COUNT} files, max 200MB total
-            </p>
-
-            <div className="flex w-full max-w-xs flex-col gap-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  open();
-                }}
-                className="z-20 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] hover:bg-cyan-400 active:scale-95"
-              >
-                <FolderOpen className="h-5 w-5" />
-                Browse Files
-              </button>
-
-              <div
-                className="flex items-center justify-center gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-700/50 dark:bg-slate-800/50"
+                className="flex items-center justify-between"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Expires in:
-                </span>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Auto-delete after:
+                  </span>
+                </div>
                 <select
                   value={expiryDuration}
                   onChange={(e) => {
@@ -489,20 +343,111 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                       onExpiryChange(option.label);
                     }
                   }}
-                  className="cursor-pointer bg-transparent text-xs font-bold text-slate-700 transition-colors hover:text-cyan-500 focus:outline-none dark:text-slate-300"
+                  className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-slate-800 dark:text-gray-300"
                 >
                   {EXPIRY_OPTIONS.map((option) => (
-                    <option
-                      key={option.value}
-                      value={option.value}
-                      className="bg-white dark:bg-slate-800"
-                    >
+                    <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
               </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startFilesUpload();
+                }}
+                className="w-full rounded-lg bg-primary px-4 py-2.5 font-semibold text-white shadow-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+              >
+                Upload Files
+              </button>
             </div>
+          </div>
+        );
+
+      case "uploading":
+        return (
+          <div className="flex flex-col items-center justify-center py-8 w-full">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+            <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+              Uploading...
+            </h2>
+            <p className="mb-6 text-sm text-gray-500">
+              {uploadProgress}% complete
+            </p>
+            
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
+              <div 
+                className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        );
+
+      case "success":
+        return (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="mb-4 rounded-full bg-green-100 p-3 dark:bg-green-900/30">
+              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Upload Complete!
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Redirecting to your share link...
+            </p>
+          </div>
+        );
+
+      case "error":
+        return (
+          <div className="flex flex-col items-center justify-center py-6 w-full">
+            <div className="mb-4 rounded-full bg-red-50 p-3 dark:bg-red-900/20">
+              <X className="h-8 w-8 text-red-500" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              Upload Failed
+            </h2>
+            <div className="mt-2 mb-6 rounded-md bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600 w-full text-center dark:bg-red-900/10 dark:border-red-900/20">
+              {errorMessage}
+            </div>
+            <button
+              onClick={resetUpload}
+              className="rounded-lg bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900"
+              type="button"
+            >
+              Try Again
+            </button>
+          </div>
+        );
+
+      default:
+        // Idle state
+        return (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 rounded-full bg-gray-50 p-4 border border-gray-100 dark:bg-slate-800 dark:border-slate-700">
+              <CloudUpload className="h-8 w-8 text-gray-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              Click to upload or drag & drop
+            </h2>
+            <p className="text-sm text-gray-500 max-w-xs mx-auto mb-6">
+              Up to {MAX_FILE_COUNT} files, {formatFileSize(MAX_FILE_SIZE)} limit
+            </p>
+            
+            <button
+               onClick={(e) => {
+                e.stopPropagation();
+                open();
+              }}
+              className="rounded-lg bg-white border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors shadow-sm dark:bg-slate-800 dark:border-slate-600 dark:text-gray-300"
+              type="button"
+            >
+              Select Files
+            </button>
           </div>
         );
     }
@@ -511,13 +456,22 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
   return (
     <div
       {...getRootProps({
-        className: `drop-zone group relative flex min-h-100 w-full cursor-pointer flex-col items-center justify-center rounded-2xl p-2 text-center transition-all duration-300 ${
-          uploadState === "dragging"
-            ? "scale-[1.02] border-cyan-500/50 bg-cyan-50/50 dark:bg-cyan-900/10"
-            : uploadState === "ready"
-              ? "border-transparent bg-white dark:bg-[#161b22]"
-              : "bg-transparent dark:bg-transparent"
-        }`,
+        className: `relative flex min-h-[400px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 transition-all duration-200 outline-none
+          ${
+            uploadState === "dragging"
+              ? "border-primary bg-primary/5"
+              : uploadState === "success"
+              ? "border-green-400"
+              : uploadState === "error"
+              ? "border-red-300"
+              : uploadState === "uploading"
+              ? "border-indigo-400"
+              : uploadState === "ready"
+              ? "border-gray-300"
+              : "border-gray-300 hover:border-primary/50 hover:bg-gray-50/50 dark:border-gray-700 dark:hover:bg-slate-800/50"
+          }
+          ${uploadState === "ready" || uploadState === "uploading" || uploadState === "success" || uploadState === "error" ? "cursor-default bg-white dark:bg-slate-800" : ""}
+        `,
       })}
     >
       <input {...getInputProps()} />
