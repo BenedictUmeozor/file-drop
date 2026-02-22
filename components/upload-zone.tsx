@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
 
 type UploadState =
   | "idle"
@@ -50,7 +51,6 @@ interface UploadZoneProps {
 
 export function UploadZone({ onExpiryChange }: UploadZoneProps) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -199,69 +199,43 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     await startUpload(selectedFiles, { expiryDuration, bundleId });
   };
 
-  const handleDragOver = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (uploadState !== "uploading" && uploadState !== "success") {
-        setUploadState("dragging");
-      }
-    },
-    [uploadState],
-  );
-
-  const handleDragLeave = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (uploadState === "dragging") {
-        setUploadState(selectedFiles.length > 0 ? "ready" : "idle");
-      }
-    },
-    [uploadState, selectedFiles.length],
-  );
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length > 0) {
-        handleFiles(files);
-      } else {
-        setUploadState(selectedFiles.length > 0 ? "ready" : "idle");
-      }
-    },
-    [handleFiles, selectedFiles.length],
-  );
-
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        handleFiles(Array.from(files));
-      }
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    },
-    [handleFiles],
-  );
-
-  const handleBrowseClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const resetUpload = () => {
     setUploadState("idle");
     setSelectedFiles([]);
     setUploadProgress(0);
     setErrorMessage("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        handleFiles(acceptedFiles);
+      }
+    },
+    [handleFiles],
+  );
+
+  const onDragEnter = useCallback(() => {
+    if (uploadState !== "uploading" && uploadState !== "success") {
+      setUploadState("dragging");
+    }
+  }, [uploadState]);
+
+  const onDragLeave = useCallback(() => {
+    if (uploadState === "dragging") {
+      setUploadState(selectedFiles.length > 0 ? "ready" : "idle");
+    }
+  }, [uploadState, selectedFiles.length]);
+
+  const { getRootProps, getInputProps, open } = useDropzone({
+    onDrop,
+    onDragEnter,
+    onDragLeave,
+    multiple: true,
+    noClick: uploadState !== "idle",
+    noKeyboard: true,
+    disabled: uploadState === "uploading" || uploadState === "success",
+  });
 
   const renderContent = () => {
     switch (uploadState) {
@@ -340,7 +314,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleBrowseClick();
+                  open();
                 }}
                 className="hover:border-primary hover:text-primary mb-4 w-full rounded-lg border-2 border-dashed border-slate-200 py-2 text-sm text-slate-400 transition-colors dark:border-slate-700"
               >
@@ -487,7 +461,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleBrowseClick();
+                  open();
                 }}
                 className="z-20 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] hover:bg-cyan-400 active:scale-95"
               >
@@ -536,25 +510,17 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
   return (
     <div
-      className={`drop-zone group relative flex min-h-100 w-full cursor-pointer flex-col items-center justify-center rounded-2xl p-2 text-center transition-all duration-300 ${
-        uploadState === "dragging"
-          ? "scale-[1.02] border-cyan-500/50 bg-cyan-50/50 dark:bg-cyan-900/10"
-          : uploadState === "ready"
-            ? "border-transparent bg-white dark:bg-[#161b22]"
-            : "bg-transparent dark:bg-transparent"
-      }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={uploadState === "idle" ? handleBrowseClick : undefined}
+      {...getRootProps({
+        className: `drop-zone group relative flex min-h-100 w-full cursor-pointer flex-col items-center justify-center rounded-2xl p-2 text-center transition-all duration-300 ${
+          uploadState === "dragging"
+            ? "scale-[1.02] border-cyan-500/50 bg-cyan-50/50 dark:bg-cyan-900/10"
+            : uploadState === "ready"
+              ? "border-transparent bg-white dark:bg-[#161b22]"
+              : "bg-transparent dark:bg-transparent"
+        }`,
+      })}
     >
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={handleFileSelect}
-      />
+      <input {...getInputProps()} />
       {renderContent()}
     </div>
   );
