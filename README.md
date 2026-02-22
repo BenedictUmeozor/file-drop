@@ -112,4 +112,4 @@ MIT License — feel free to use this project for personal or commercial purpose
 
 ## 👤 Author
 
-Made with ❤️ by [Benedict](https://github.com/BenedictUmeozor)
+Made with ❤️ by [Benedict](https://benedictumeozor.vercel.app/)

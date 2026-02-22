@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 
 export const saveFile = mutation({
   args: {
@@ -45,6 +46,14 @@ export const createBundle = mutation({
       createdAt: args.createdAt,
       expiresAt: args.expiresAt,
     });
+
+    // Schedule precise cleanup to fire exactly when this bundle expires
+    await ctx.scheduler.runAt(
+      args.expiresAt,
+      internal.cleanup.deleteExpiredBundle,
+      { bundleId: args.bundleId },
+    );
+
     return id;
   },
 });
@@ -152,6 +161,46 @@ export const getExpiredBundles = query({
   },
 });
 
+// ─── Internal helpers used by convex/cleanup.ts ─────────────────────────────
+
+/** Returns a bundle and all its files in one query (for use inside actions). */
+export const getBundleWithFilesInternal = internalQuery({
+  args: { bundleId: v.string() },
+  handler: async (ctx, args) => {
+    const bundle = await ctx.db
+      .query("bundles")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .first();
+    if (!bundle) return null;
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .collect();
+    return { bundle, files };
+  },
+});
+
+/** Deletes a bundle and all its files from Convex DB by bundleId string. */
+export const deleteBundleInternal = internalMutation({
+  args: { bundleId: v.string() },
+  handler: async (ctx, args) => {
+    const bundle = await ctx.db
+      .query("bundles")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .first();
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_bundleId", (q) => q.eq("bundleId", args.bundleId))
+      .collect();
+    for (const file of files) {
+      await ctx.db.delete(file._id);
+    }
+    if (bundle) {
+      await ctx.db.delete(bundle._id);
+    }
+  },
+});
+
 export const deleteExpiredFile = internalMutation({
   args: { id: v.id("files") },
   handler: async (ctx, args) => {
@@ -159,7 +208,7 @@ export const deleteExpiredFile = internalMutation({
   },
 });
 
-export const deleteExpiredBundle = internalMutation({
+export const deleteBundleById = internalMutation({
   args: { id: v.id("bundles") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);

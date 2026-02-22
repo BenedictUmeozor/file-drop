@@ -19,31 +19,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let deletedFilesCount = 0;
-    let deletedBundlesCount = 0;
     const allUploadThingKeys: string[] = [];
 
+    // Step 1: Fetch expired bundles and collect their UploadThing keys
     const expiredBundles = await convex.query(api.files.getExpiredBundles, {});
+    const bundleFileData: Array<{ bundleId: string; fileCount: number }> = [];
 
     for (const bundle of expiredBundles) {
-      const result = await convex.mutation(api.files.deleteBundle, {
+      const files = await convex.query(api.files.getBundleFiles, {
         bundleId: bundle.bundleId,
       });
-      allUploadThingKeys.push(...result.uploadThingKeys);
-      deletedFilesCount += result.uploadThingKeys.length;
-      deletedBundlesCount++;
+      const keys = files.map((f) => f.uploadThingKey);
+      allUploadThingKeys.push(...keys);
+      bundleFileData.push({ bundleId: bundle.bundleId, fileCount: keys.length });
     }
 
+    // Step 2: Fetch orphaned expired files and collect their keys
     const expiredFiles = await convex.query(api.files.getExpiredFiles, {});
-
     for (const file of expiredFiles) {
       allUploadThingKeys.push(file.uploadThingKey);
-      await convex.mutation(api.files.deleteFile, { fileId: file.fileId });
-      deletedFilesCount++;
     }
 
+    // Step 3: Delete from UploadThing FIRST — avoids orphaned storage if Convex deletion fails
     if (allUploadThingKeys.length > 0) {
       await deleteUploadThingFiles(allUploadThingKeys);
+    }
+
+    // Step 4: Delete from Convex only after storage is cleared
+    let deletedFilesCount = 0;
+    let deletedBundlesCount = 0;
+
+    for (const { bundleId, fileCount } of bundleFileData) {
+      await convex.mutation(api.files.deleteBundle, { bundleId });
+      deletedBundlesCount++;
+      deletedFilesCount += fileCount;
+    }
+
+    for (const file of expiredFiles) {
+      await convex.mutation(api.files.deleteFile, { fileId: file.fileId });
+      deletedFilesCount++;
     }
 
     return NextResponse.json({
