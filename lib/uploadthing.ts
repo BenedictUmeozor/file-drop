@@ -7,9 +7,17 @@ import { z } from "zod";
 const f = createUploadthing();
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const DEFAULT_EXPIRY_DURATION = 10 * 60 * 1000;
+const DEFAULT_EXPIRY_DURATION = 10 * 60 * 1000; // 10 minutes
 const MAX_FILE_SIZE = "256MB";
 const MAX_FILE_COUNT = 10;
+
+// Allowed expiry durations (must match UI options)
+const ALLOWED_EXPIRY_DURATIONS = [
+  10 * 60 * 1000,  // 10 minutes
+  30 * 60 * 1000,  // 30 minutes
+  60 * 60 * 1000,  // 1 hour
+];
+const MAX_EXPIRY_DURATION = 60 * 60 * 1000; // 1 hour max
 
 export const uploadRouter = {
   fileUploader: f({
@@ -27,7 +35,25 @@ export const uploadRouter = {
     .middleware(async ({ input, files }) => {
       const bundleId = input?.bundleId || nanoid(12);
       const now = Date.now();
-      const expiryDuration = input?.expiryDuration || DEFAULT_EXPIRY_DURATION;
+      
+      // Validate and clamp expiryDuration to prevent unbounded expiry
+      let expiryDuration = input?.expiryDuration || DEFAULT_EXPIRY_DURATION;
+      
+      // Reject invalid durations (security: prevent abuse)
+      if (typeof expiryDuration !== 'number' || expiryDuration <= 0) {
+        throw new Error('Invalid expiry duration');
+      }
+      
+      // Clamp to maximum allowed duration
+      if (expiryDuration > MAX_EXPIRY_DURATION) {
+        expiryDuration = MAX_EXPIRY_DURATION;
+      }
+      
+      // Validate against allowed durations (matches UI restrictions)
+      if (!ALLOWED_EXPIRY_DURATIONS.includes(expiryDuration)) {
+        throw new Error('Expiry duration must be 10min, 30min, or 1hr');
+      }
+      
       const expiresAt = now + expiryDuration;
 
       return {

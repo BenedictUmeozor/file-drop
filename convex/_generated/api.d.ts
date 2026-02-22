@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as bundleAuth from "../bundleAuth.js";
 import type * as cleanup from "../cleanup.js";
 import type * as files from "../files.js";
 
@@ -18,6 +19,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  bundleAuth: typeof bundleAuth;
   cleanup: typeof cleanup;
   files: typeof files;
 }>;

@@ -10,6 +10,7 @@ import {
   CloudUpload,
   File,
   Files,
+  Lock,
   Share2,
 } from "lucide-react";
 import { headers } from "next/headers";
@@ -35,6 +36,7 @@ interface BundleMetadata {
   totalSize: number;
   createdAt: number;
   expiresAt: number;
+  isPasswordProtected: boolean;
   files: FileMetadata[];
 }
 
@@ -51,9 +53,13 @@ async function getBundleMetadata(id: string): Promise<BundleMetadata | null> {
     const headersList = await headers();
     const host = headersList.get("host") || "localhost:3000";
     const protocol = headersList.get("x-forwarded-proto") || "http";
+    const cookieHeader = headersList.get("cookie");
 
     const response = await fetch(`${protocol}://${host}/api/bundle/${id}`, {
       cache: "no-store",
+      headers: {
+        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      },
     });
 
     if (!response.ok) {
@@ -107,6 +113,12 @@ export default async function SharePage({ params }: PageProps) {
                     <Share2 className="h-4 w-4" />
                     Share this link or scan the QR code
                   </p>
+                  {metadata.isPasswordProtected && (
+                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 shadow-sm dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-400">
+                      <Lock className="h-3 w-3" />
+                      Password Protected
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 md:p-8">
@@ -156,7 +168,7 @@ export default async function SharePage({ params }: PageProps) {
                       </div>
                     </div>
 
-                    <div className="flex min-w-[160px] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-slate-800">
+                    <div className="flex min-w-40 flex-col items-center justify-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-slate-800">
                        <QRCode url={shareUrl} size={120} />
                       <span className="mt-2 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
                         Scan to download

@@ -23,7 +23,22 @@ export default defineSchema({
     totalSize: v.number(),
     createdAt: v.number(),
     expiresAt: v.number(),
+    isPasswordProtected: v.boolean(),
   })
     .index("by_bundleId", ["bundleId"])
     .index("by_expiresAt", ["expiresAt"]),
+
+  bundleSecrets: defineTable({
+    bundleId: v.string(),
+    passphraseHash: v.string(),
+    createdAt: v.number(),
+  }).index("by_bundleId", ["bundleId"]),
+
+  bundleUnlockAttempts: defineTable({
+    bundleId: v.string(),
+    ip: v.string(),
+    windowStart: v.number(),
+    count: v.number(),
+    blockedUntil: v.number(),
+  }).index("by_bundleId_ip", ["bundleId", "ip"]),
 });

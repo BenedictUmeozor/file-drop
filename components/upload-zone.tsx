@@ -1,12 +1,12 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
 import { useUploadThing } from "@/lib/uploadthing-client";
-import { useMutation } from "convex/react";
 import {
   Check,
   Clock,
   CloudUpload,
+  Eye,
+  EyeOff,
   File,
   Files,
   Loader2,
@@ -29,6 +29,8 @@ type UploadState =
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024;
 const MAX_FILE_COUNT = 10;
+const MIN_PASSPHRASE_LENGTH = 8;
+const MAX_PASSPHRASE_LENGTH = 128;
 
 export const EXPIRY_OPTIONS = [
   { label: "10 minutes", value: 10 * 60 * 1000 },
@@ -57,8 +59,8 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
   const [expiryDuration, setExpiryDuration] = useState<number>(
     EXPIRY_OPTIONS[0].value,
   );
-
-  const createBundle = useMutation(api.files.createBundle);
+  const [passphrase, setPassphrase] = useState<string>("");
+  const [showPassphrase, setShowPassphrase] = useState<boolean>(false);
 
   const { startUpload } = useUploadThing("fileUploader", {
     onUploadProgress: (progress) => {
@@ -70,13 +72,25 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         const totalSize = res.reduce((sum, r) => sum + r.serverData.size, 0);
 
         try {
-          await createBundle({
-            bundleId,
-            fileCount: res.length,
-            totalSize,
-            createdAt: Date.now(),
-            expiresAt: res[0].serverData.expiresAt,
+          // Call server endpoint to create bundle with optional password hash
+          const response = await fetch("/api/bundle", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              bundleId,
+              fileCount: res.length,
+              totalSize,
+              expiresAt: res[0].serverData.expiresAt,
+              passphrase: passphrase || undefined,
+            }),
           });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to create bundle");
+          }
 
           setUploadState("success");
           setUploadProgress(100);
@@ -87,7 +101,9 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         } catch (err) {
           console.error("Bundle creation error:", err);
           setErrorMessage(
-            "Files uploaded but failed to create share link. Please try again.",
+            err instanceof Error
+              ? err.message
+              : "Files uploaded but failed to create share link. Please try again.",
           );
           setUploadState("error");
         }
@@ -203,6 +219,8 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     setSelectedFiles([]);
     setUploadProgress(0);
     setErrorMessage("");
+    setPassphrase("");
+    setShowPassphrase(false);
   };
 
   const onDrop = useCallback(
@@ -353,9 +371,63 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                 </select>
               </div>
 
+              <div onClick={(e) => e.stopPropagation()}>
+                <label
+                  htmlFor="passphrase"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Passphrase (optional)
+                </label>
+                <div className="relative">
+                  <input
+                    id="passphrase"
+                    type={showPassphrase ? "text" : "password"}
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    placeholder="Leave empty for no password"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-slate-800 dark:text-white dark:placeholder-gray-500"
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassphrase(!showPassphrase)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    tabIndex={-1}
+                  >
+                    {showPassphrase ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Use a long passphrase; {MIN_PASSPHRASE_LENGTH}+ characters recommended
+                </p>
+              </div>
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  
+                  // Validate passphrase if provided
+                  if (passphrase.length > 0) {
+                    if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
+                      setErrorMessage(
+                        `Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters`
+                      );
+                      setUploadState("error");
+                      return;
+                    }
+                    if (passphrase.length > MAX_PASSPHRASE_LENGTH) {
+                      setErrorMessage(
+                        `Passphrase must be at most ${MAX_PASSPHRASE_LENGTH} characters`
+                      );
+                      setUploadState("error");
+                      return;
+                    }
+                  }
+                  
                   startFilesUpload();
                 }}
                 className="w-full rounded-lg bg-primary px-4 py-2.5 font-semibold text-white shadow-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

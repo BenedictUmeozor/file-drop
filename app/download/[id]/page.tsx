@@ -1,4 +1,5 @@
 import { BackgroundDecorations } from "@/components/background-decorations";
+import { BundleUnlockForm } from "@/components/bundle-unlock-form";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -36,6 +37,8 @@ interface BundleMetadata {
   totalSize: number;
   createdAt: number;
   expiresAt: number;
+  isPasswordProtected: boolean;
+  isUnlocked: boolean;
   files: FileMetadata[];
 }
 
@@ -59,9 +62,13 @@ async function getBundleMetadata(
     const headersList = await headers();
     const host = headersList.get("host") || "localhost:3000";
     const protocol = headersList.get("x-forwarded-proto") || "http";
+    const cookieHeader = headersList.get("cookie");
 
     const response = await fetch(`${protocol}://${host}/api/bundle/${id}`, {
       cache: "no-store",
+      headers: {
+        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      },
     });
 
     if (!response.ok) {
@@ -123,7 +130,11 @@ export default async function DownloadPage({ params }: PageProps) {
                 </div>
 
                 <div className="p-6 md:p-8">
-                  <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-slate-900/50">
+                  {metadata.isPasswordProtected && !metadata.isUnlocked ? (
+                    <BundleUnlockForm bundleId={id} />
+                  ) : (
+                    <>
+                      <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-slate-900/50">
                     <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700">
                       <div className="flex items-center gap-2">
                         <div className="rounded-lg bg-white p-1.5 text-gray-500 shadow-sm dark:bg-slate-800 dark:text-gray-400">
@@ -195,6 +206,8 @@ export default async function DownloadPage({ params }: PageProps) {
                       </span>
                     </div>
                   </div>
+                    </>
+                  )}
                 </div>
               </div>
 

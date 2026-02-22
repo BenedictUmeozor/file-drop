@@ -62,7 +62,10 @@
    NEXT_PUBLIC_CONVEX_URL=your_convex_url
    UPLOADTHING_TOKEN=your_uploadthing_token
    CRON_SECRET=your_cron_secret
+   BUNDLE_AUTH_SERVER_TOKEN=your_random_secret_token
    ```
+
+   > **Password Protection:** See [PASSWORD_PROTECTION_SETUP.md](PASSWORD_PROTECTION_SETUP.md) for details on `BUNDLE_AUTH_SERVER_TOKEN`.
 
 4. **Start the development server**
 

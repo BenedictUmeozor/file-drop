@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       !isProxyTrigger &&
       authHeader !== `Bearer ${cronSecret}`
     ) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "Cache-Control": "no-store" } });
     }
 
     const allUploadThingKeys: string[] = [];
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("[Cleanup] Error:", error);
-    return NextResponse.json({ error: "Cleanup failed" }, { status: 500 });
+    return NextResponse.json({ error: "Cleanup failed" }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
 }
 

@@ -1,4 +1,5 @@
 import { api } from "@/convex/_generated/api";
+import { verifyUnlockToken, makeUnlockCookieName } from "@/lib/bundle-unlock-cookie";
 import { deleteUploadThingFile } from "@/lib/utapi";
 import { ConvexHttpClient } from "convex/browser";
 import { NextRequest, NextResponse } from "next/server";
@@ -16,14 +17,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!id) {
       return NextResponse.json(
         { error: "Bundle ID is required" },
-        { status: 400 },
+        { status: 400, headers: { "Cache-Control": "no-store" } },
       );
     }
 
     const bundle = await convex.query(api.files.getBundle, { bundleId: id });
 
     if (!bundle) {
-      return NextResponse.json({ error: "Bundle not found" }, { status: 404 });
+      return NextResponse.json({ error: "Bundle not found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
     }
 
     if (Date.now() > bundle.expiresAt) {
@@ -37,13 +38,35 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
       return NextResponse.json(
         { error: "Files have expired" },
-        { status: 410 },
+        { status: 410, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const files = await convex.query(api.files.getBundleFiles, {
+    // Check if bundle is unlocked (for password-protected bundles)
+    let isUnlocked = true;
+    if (bundle.isPasswordProtected) {
+      const cookieName = makeUnlockCookieName(id);
+      const cookieValue = request.cookies.get(cookieName)?.value;
+      
+      if (cookieValue) {
+        const verified = verifyUnlockToken(cookieValue);
+        isUnlocked = verified !== null && verified.bundleId === id;
+      } else {
+        isUnlocked = false;
+      }
+    }
+
+    // Use server-guarded query to get full file data with URLs
+    const files = await convex.query(api.files.getBundleFilesForServer, {
       bundleId: id,
+      serverToken: process.env.BUNDLE_AUTH_SERVER_TOKEN || "",
     });
+
+    // Prepare response headers
+    const headers: HeadersInit = {};
+    if (bundle.isPasswordProtected) {
+      headers['Cache-Control'] = 'no-store';
+    }
 
     return NextResponse.json({
       bundleId: bundle.bundleId,
@@ -51,6 +74,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       totalSize: bundle.totalSize,
       createdAt: bundle.createdAt,
       expiresAt: bundle.expiresAt,
+      isPasswordProtected: bundle.isPasswordProtected,
+      isUnlocked,
       files: files.map((f) => ({
         fileId: f.fileId,
         filename: f.filename,
@@ -58,14 +83,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         mimetype: f.mimetype,
         createdAt: f.createdAt,
         expiresAt: f.expiresAt,
-        uploadThingUrl: f.uploadThingUrl,
+        // Only expose direct URLs if bundle is unlocked, otherwise use guarded endpoint
+        uploadThingUrl: isUnlocked ? f.uploadThingUrl : undefined,
+        downloadUrl: isUnlocked ? undefined : `/api/download/${f.fileId}`,
       })),
-    });
+    }, { headers });
   } catch (error) {
     console.error("[Bundle] Error:", error);
     return NextResponse.json(
       { error: "Failed to get bundle metadata" },
-      { status: 500 },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }
