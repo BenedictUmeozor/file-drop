@@ -4,6 +4,7 @@ import {
   signUnlockToken,
 } from "@/lib/bundle-unlock-cookie";
 import { verifyPassphrase } from "@/lib/passphrase";
+import { verifyUnlockProof } from "@/lib/crypto/hmac-verifier";
 import { ConvexHttpClient } from "convex/browser";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Parse request body
-    let body: { passphrase?: string };
+    let body: { passphrase?: string; unlockProof?: string };
     try {
       body = await request.json();
     } catch {
@@ -72,11 +73,25 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { passphrase } = body;
+    const { passphrase, unlockProof } = body;
 
-    if (!passphrase || typeof passphrase !== "string") {
+    if (!passphrase && !unlockProof) {
       return NextResponse.json(
-        { error: "Passphrase is required" },
+        { error: "Passphrase or unlock proof is required" },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+    
+    if (passphrase && typeof passphrase !== "string") {
+      return NextResponse.json(
+        { error: "Passphrase must be a string" },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+    
+    if (unlockProof && typeof unlockProof !== "string") {
+      return NextResponse.json(
+        { error: "Unlock proof must be a string" },
         { status: 400, headers: { "Cache-Control": "no-store" } }
       );
     }
@@ -134,25 +149,51 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Get the stored hash
+    // Get the stored hash/verifier
     const secret = await convex.query(api.bundleAuth.getBundleSecretForServer, {
       bundleId: id,
       serverToken: SERVER_TOKEN,
     });
 
-    if (!secret || !secret.passphraseHash) {
+    if (!secret) {
       return NextResponse.json(
-        { error: "Invalid passphrase" },
+        { error: "Invalid credentials" },
         { status: 401, headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    // Verify passphrase
-    const isValid = await verifyPassphrase(secret.passphraseHash, passphrase);
+    // SECURITY FIX: Different verification paths for encrypted vs non-encrypted bundles
+    let isValid = false;
+    
+    if (unlockProof && secret.unlockVerifierB64) {
+      // Encrypted bundle: verify HMAC(serverSecret, unlockProof)
+      const serverSecret = process.env.E2E_UNLOCK_VERIFIER_SECRET;
+      if (!serverSecret || serverSecret.length < 32) {
+        console.error("E2E_UNLOCK_VERIFIER_SECRET not configured");
+        return NextResponse.json(
+          { error: "Server configuration error" },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+      
+      isValid = verifyUnlockProof(
+        unlockProof,
+        secret.unlockVerifierB64,
+        serverSecret
+      );
+    } else if (passphrase && secret.passphraseHash) {
+      // Non-encrypted bundle: verify Argon2 passphrase hash (legacy)
+      isValid = await verifyPassphrase(secret.passphraseHash, passphrase);
+    } else {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     if (!isValid) {
       return NextResponse.json(
-        { error: "Invalid passphrase" },
+        { error: "Invalid credentials" },
         { status: 401, headers: { "Cache-Control": "no-store" } }
       );
     }

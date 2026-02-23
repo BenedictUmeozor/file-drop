@@ -1,5 +1,6 @@
 import { api } from "@/convex/_generated/api";
 import { hashPassphrase } from "@/lib/passphrase";
+import { computeUnlockVerifier } from "@/lib/crypto/hmac-verifier";
 import { ConvexHttpClient } from "convex/browser";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,6 +15,14 @@ export async function POST(request: NextRequest) {
       createdAt?: number; // Now optional, will be set server-side
       expiresAt: number;
       passphrase?: string;
+      encryptionData?: {
+        isEncrypted: boolean;
+        encryptionSaltB64: string;
+        encryptionIterations: number;
+        encryptionChunkSize: number;
+        unlockSaltB64: string;
+        unlockProof: string;
+      };
     };
 
     try {
@@ -25,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { bundleId, fileCount, totalSize, expiresAt, passphrase } = body;
+    const { bundleId, fileCount, totalSize, expiresAt, passphrase, encryptionData } = body;
 
     // Validate required fields
     if (
@@ -67,6 +76,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Reject passphrase if bundle is E2E encrypted (zero-knowledge requirement)
+    if (encryptionData?.isEncrypted && passphrase) {
+      return NextResponse.json(
+        { error: "Passphrase must not be sent for encrypted bundles" },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     // Validate passphrase if provided
     if (passphrase !== undefined) {
       if (typeof passphrase !== "string") {
@@ -97,6 +114,74 @@ export async function POST(request: NextRequest) {
       passphraseHash = await hashPassphrase(passphrase);
     }
 
+    // Prepare encryption parameters
+    let isEncrypted = false;
+    let encryptionSaltB64: string | undefined;
+    let encryptionIterations: number | undefined;
+    let encryptionChunkSize: number | undefined;
+    let unlockSaltB64: string | undefined;
+    let unlockVerifierB64: string | undefined;
+
+    if (encryptionData?.isEncrypted) {
+      isEncrypted = true;
+      encryptionSaltB64 = encryptionData.encryptionSaltB64;
+      
+      // SECURITY: Validate KDF parameters to prevent abuse
+      const MIN_ITERATIONS = 10000;
+      const MAX_ITERATIONS = 1000000;
+      const ALLOWED_CHUNK_SIZES = [1048576]; // 1MB only for now
+      
+      encryptionIterations = encryptionData.encryptionIterations;
+      if (typeof encryptionIterations !== 'number' || 
+          encryptionIterations < MIN_ITERATIONS || 
+          encryptionIterations > MAX_ITERATIONS) {
+        return NextResponse.json(
+          { error: `Invalid encryption iterations: must be between ${MIN_ITERATIONS} and ${MAX_ITERATIONS}` },
+          { status: 400, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+      
+      encryptionChunkSize = encryptionData.encryptionChunkSize;
+      if (typeof encryptionChunkSize !== 'number' || 
+          !ALLOWED_CHUNK_SIZES.includes(encryptionChunkSize)) {
+        return NextResponse.json(
+          { error: `Invalid chunk size: must be ${ALLOWED_CHUNK_SIZES.join(' or ')} bytes` },
+          { status: 400, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+      
+      unlockSaltB64 = encryptionData.unlockSaltB64;
+      
+      // SECURITY: Enforce unlock salt ≠ encryption salt (domain separation)
+      if (unlockSaltB64 === encryptionSaltB64) {
+        return NextResponse.json(
+          { error: "Unlock salt must be different from encryption salt" },
+          { status: 400, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+      
+      // SECURITY FIX: Compute HMAC(serverSecret, unlockProof) instead of storing raw proof
+      const serverSecret = process.env.E2E_UNLOCK_VERIFIER_SECRET;
+      if (!serverSecret || serverSecret.length < 32) {
+        console.error("E2E_UNLOCK_VERIFIER_SECRET not configured or too short");
+        return NextResponse.json(
+          { error: "Server configuration error" },
+          { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+      
+      const unlockProof = encryptionData.unlockProof;
+      if (!unlockProof || typeof unlockProof !== 'string') {
+        return NextResponse.json(
+          { error: "Missing unlock proof" },
+          { status: 400, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+      
+      // Compute HMAC verifier (prevents DB compromise from revealing unlock material)
+      unlockVerifierB64 = computeUnlockVerifier(unlockProof, serverSecret);
+    }
+
     // Create bundle in Convex
     const id = await convex.mutation(api.files.createBundle, {
       bundleId,
@@ -106,6 +191,12 @@ export async function POST(request: NextRequest) {
       expiresAt,
       passphraseHash,
       serverToken: process.env.BUNDLE_AUTH_SERVER_TOKEN || "",
+      isEncrypted,
+      encryptionSaltB64,
+      encryptionIterations,
+      encryptionChunkSize,
+      unlockSaltB64,
+      unlockVerifierB64,
     });
 
     return NextResponse.json(

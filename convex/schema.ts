@@ -12,6 +12,14 @@ export default defineSchema({
     expiresAt: v.number(),
     uploadThingKey: v.string(),
     uploadThingUrl: v.string(),
+    // E2E encryption fields
+    isEncrypted: v.optional(v.boolean()),
+    encryptedMetadataB64: v.optional(v.string()),
+    encryptedMetadataIvB64: v.optional(v.string()),
+    wrappedDekB64: v.optional(v.string()),
+    wrappedDekIvB64: v.optional(v.string()),
+    baseNonceB64: v.optional(v.string()),
+    originalSize: v.optional(v.number()),
   })
     .index("by_fileId", ["fileId"])
     .index("by_bundleId", ["bundleId"])
@@ -24,14 +32,22 @@ export default defineSchema({
     createdAt: v.number(),
     expiresAt: v.number(),
     isPasswordProtected: v.boolean(),
+    // E2E encryption fields
+    isEncrypted: v.optional(v.boolean()),
+    encryptionSaltB64: v.optional(v.string()),
+    encryptionIterations: v.optional(v.number()),
+    encryptionChunkSize: v.optional(v.number()),
   })
     .index("by_bundleId", ["bundleId"])
     .index("by_expiresAt", ["expiresAt"]),
 
   bundleSecrets: defineTable({
     bundleId: v.string(),
-    passphraseHash: v.string(),
+    passphraseHash: v.optional(v.string()),
     createdAt: v.number(),
+    // Zero-knowledge unlock fields
+    unlockSaltB64: v.optional(v.string()),
+    unlockVerifierB64: v.optional(v.string()),
   }).index("by_bundleId", ["bundleId"]),
 
   bundleUnlockAttempts: defineTable({

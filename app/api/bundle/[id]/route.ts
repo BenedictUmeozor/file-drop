@@ -62,6 +62,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       serverToken: process.env.BUNDLE_AUTH_SERVER_TOKEN || "",
     });
 
+    // For encrypted bundles, get unlock salt (safe to expose - non-secret KDF param)
+    let unlockSaltB64: string | undefined;
+    if (bundle.isEncrypted && bundle.isPasswordProtected) {
+      const secret = await convex.query(api.bundleAuth.getBundleSecretForServer, {
+        bundleId: id,
+        serverToken: process.env.BUNDLE_AUTH_SERVER_TOKEN || "",
+      });
+      unlockSaltB64 = secret?.unlockSaltB64;
+    }
+
     // Prepare response headers
     const headers: HeadersInit = {};
     if (bundle.isPasswordProtected) {
@@ -76,6 +86,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       expiresAt: bundle.expiresAt,
       isPasswordProtected: bundle.isPasswordProtected,
       isUnlocked,
+      // E2E encryption metadata
+      isEncrypted: bundle.isEncrypted || false,
+      encryptionSaltB64: bundle.encryptionSaltB64,
+      encryptionIterations: bundle.encryptionIterations,
+      encryptionChunkSize: bundle.encryptionChunkSize,
+      unlockSaltB64, // For zero-knowledge unlock proof derivation
       files: files.map((f) => ({
         fileId: f.fileId,
         filename: f.filename,
@@ -83,6 +99,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         mimetype: f.mimetype,
         createdAt: f.createdAt,
         expiresAt: f.expiresAt,
+        // Encryption metadata for this file
+        isEncrypted: f.isEncrypted,
+        encryptedMetadataB64: f.encryptedMetadataB64,
+        encryptedMetadataIvB64: f.encryptedMetadataIvB64,
+        wrappedDekB64: f.wrappedDekB64,
+        wrappedDekIvB64: f.wrappedDekIvB64,
+        baseNonceB64: f.baseNonceB64,
+        originalSize: f.originalSize,
         // Only expose direct URLs if bundle is unlocked, otherwise use guarded endpoint
         uploadThingUrl: isUnlocked ? f.uploadThingUrl : undefined,
         downloadUrl: isUnlocked ? undefined : `/api/download/${f.fileId}`,

@@ -7,6 +7,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+/**
+ * Sanitizes a filename for safe use in ZIP archives.
+ * Prevents Zip Slip vulnerability by removing path traversal sequences.
+ */
+function sanitizeZipEntryName(filename: string): string {
+  return filename
+    .replace(/\.\./g, '') // Remove .. sequences
+    .replace(/[/\\]/g, '_') // Replace path separators with underscore
+    .trim() || 'file'; // Prevent empty filenames
+}
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
@@ -91,7 +102,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       files.map(async (file) => {
         const response = await fetch(file.uploadThingUrl);
         const arrayBuffer = await response.arrayBuffer();
-        archive.append(Buffer.from(arrayBuffer), { name: file.filename });
+        archive.append(Buffer.from(arrayBuffer), { name: sanitizeZipEntryName(file.filename) });
       }),
     );
 

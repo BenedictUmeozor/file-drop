@@ -13,16 +13,28 @@ import {
   Trash2,
   Upload,
   X,
+  Shield,
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import {
+  generateSalt,
+  deriveKeysFromPassphrase,
+  deriveUnlockProof,
+  DEFAULT_PBKDF2_ITERATIONS,
+  encryptFile,
+  uint8ArrayToBase64Url,
+  isWebCryptoAvailable,
+  DEFAULT_CHUNK_SIZE,
+} from "@/lib/crypto";
 
 type UploadState =
   | "idle"
   | "dragging"
   | "ready"
+  | "encrypting"
   | "uploading"
   | "success"
   | "error";
@@ -55,12 +67,16 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [encryptionProgress, setEncryptionProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [expiryDuration, setExpiryDuration] = useState<number>(
     EXPIRY_OPTIONS[0].value,
   );
   const [passphrase, setPassphrase] = useState<string>("");
   const [showPassphrase, setShowPassphrase] = useState<boolean>(false);
+
+  // Check if E2E encryption is available
+  const cryptoAvailable = typeof window !== "undefined" && isWebCryptoAvailable();
 
   const { startUpload } = useUploadThing("fileUploader", {
     onUploadProgress: (progress) => {
@@ -72,6 +88,13 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         const totalSize = res.reduce((sum, r) => sum + r.serverData.size, 0);
 
         try {
+          // Extract encryption metadata from serverData
+          const encryptionData = res[0].serverData.encryptionData as any;
+          
+          // SECURITY: For encrypted bundles, do NOT send passphrase to server
+          // The server will use the unlockProof from encryptionData instead
+          const isEncrypted = encryptionData?.isEncrypted === true;
+          
           // Call server endpoint to create bundle with optional password hash
           const response = await fetch("/api/bundle", {
             method: "POST",
@@ -83,7 +106,9 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
               fileCount: res.length,
               totalSize,
               expiresAt: res[0].serverData.expiresAt,
-              passphrase: passphrase || undefined,
+              // SECURITY FIX: Only send passphrase for non-encrypted bundles
+              passphrase: !isEncrypted && passphrase ? passphrase : undefined,
+              encryptionData: encryptionData || undefined,
             }),
           });
 
@@ -110,12 +135,25 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
       }
     },
     onUploadError: (error) => {
-      console.error("Upload error:", error);
+      // Enhanced error logging for diagnostics
+      console.error("Upload error:", {
+        code: error.code,
+        message: error.message,
+        data: error.data,
+      });
 
       const errorMsg = error.message?.toLowerCase() || "";
       let userMessage = "Upload failed. Please try again.";
 
-      if (errorMsg.includes("file size") || errorMsg.includes("too large")) {
+      // Check for Zod validation errors (highest priority)
+      if (error.data?.zodError) {
+        const fieldErrors = error.data.zodError.fieldErrors;
+        if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+          const firstField = Object.keys(fieldErrors)[0];
+          const firstError = fieldErrors[firstField]?.[0];
+          userMessage = `Validation error: ${firstError || "Invalid encryption data"}`;
+        }
+      } else if (errorMsg.includes("file size") || errorMsg.includes("too large")) {
         userMessage = "Total file size exceeds the 200MB limit.";
       } else if (
         errorMsg.includes("file count") ||
@@ -143,9 +181,8 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
       ) {
         userMessage =
           "Network error. Please check your connection and try again.";
-      } else if (error.message) {
-        userMessage = error.message;
       }
+      // Note: Removed generic error.message fallback to avoid leaking server errors
 
       setErrorMessage(userMessage);
       setUploadState("error");
@@ -209,15 +246,148 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
       return;
     }
 
-    setUploadState("uploading");
     const bundleId = nanoid(12);
-    await startUpload(selectedFiles, { expiryDuration, bundleId });
+
+    // **E2E ENCRYPTION**: Encrypt files before upload if passphrase provided and crypto available
+    if (passphrase && cryptoAvailable) {
+      // Declare variables outside try block for proper scoping
+      let encryptedFiles: File[];
+      let encryptionSaltB64: string;
+      let unlockSaltB64: string;
+      let unlockProof: string;
+      let fileEncryptionData: Array<{
+        fileId: string;
+        wrappedDekB64: string;
+        wrappedDekIvB64: string;
+        encryptedMetadataB64: string;
+        encryptedMetadataIvB64: string;
+        baseNonceB64: string;
+        originalSize: number;
+        ciphertextSize: number;
+      }>;
+
+      try {
+        setUploadState("encrypting");
+        setEncryptionProgress(0);
+
+        // 1. Generate encryption salt
+        const encryptionSalt = generateSalt();
+        encryptionSaltB64 = uint8ArrayToBase64Url(encryptionSalt);
+
+        // 2. Derive keys from passphrase
+        const { kekWrapKey, metadataKey } = await deriveKeysFromPassphrase(
+          passphrase,
+          encryptionSalt,
+          DEFAULT_PBKDF2_ITERATIONS
+        );
+
+        // 3. Generate separate unlock salt for zero-knowledge verification
+        const unlockSalt = generateSalt();
+        unlockSaltB64 = uint8ArrayToBase64Url(unlockSalt);
+        unlockProof = await deriveUnlockProof(
+          passphrase,
+          unlockSalt,
+          DEFAULT_PBKDF2_ITERATIONS
+        );
+
+        // 4. Encrypt each file
+        encryptedFiles = [];
+        fileEncryptionData = [];
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          const fileId = nanoid(12);
+          
+          // Read file bytes
+          const fileBytes = new Uint8Array(await file.arrayBuffer());
+          
+          // Encrypt file
+          const result = await encryptFile(
+            fileBytes,
+            file.name,
+            file.type || "application/octet-stream",
+            kekWrapKey,
+            metadataKey,
+            (progress) => {
+              // Overall encryption progress
+              const fileProgress = (i + progress) / selectedFiles.length;
+              setEncryptionProgress(Math.round(fileProgress * 100));
+            }
+          );
+
+          // Create encrypted File object with random name (don't leak original filename)
+          const encryptedFile = new (window as any).File(
+            [result.ciphertext.buffer as ArrayBuffer],
+            `${fileId}.enc`,
+            { type: "application/octet-stream" }
+          );
+
+          encryptedFiles.push(encryptedFile);
+          fileEncryptionData.push({
+            fileId,
+            wrappedDekB64: result.wrappedDek.wrappedDekB64,
+            wrappedDekIvB64: result.wrappedDek.wrapIvB64,
+            encryptedMetadataB64: result.encryptedMetadata.ciphertextB64,
+            encryptedMetadataIvB64: result.encryptedMetadata.ivB64,
+            baseNonceB64: result.baseNonceB64,
+            originalSize: result.originalSize,
+            ciphertextSize: result.ciphertext.length,
+          });
+        }
+
+        setEncryptionProgress(100);
+      } catch (err) {
+        console.error("Encryption error:", err);
+        setErrorMessage("Encryption failed. Please try again.");
+        setUploadState("error");
+        return;
+      }
+
+      // 5. Upload encrypted files (outside encryption try/catch to avoid mislabeling upload errors)
+      try {
+        setUploadState("uploading");
+        await startUpload(encryptedFiles, {
+          expiryDuration,
+          bundleId,
+          encryptionData: {
+            isEncrypted: true,
+            encryptionSaltB64,
+            encryptionIterations: DEFAULT_PBKDF2_ITERATIONS,
+            encryptionChunkSize: DEFAULT_CHUNK_SIZE,
+            unlockSaltB64,
+            unlockProof,
+            fileEncryptionData,
+          },
+        });
+      } catch (err) {
+        console.error("Upload error:", err);
+        // Let onUploadError be the single source of truth for error messages
+        // setErrorMessage(
+        //   err instanceof Error && err.message
+        //     ? "Upload failed. Please try again."
+        //     : "Upload failed. Please try again."
+        // );
+        setUploadState("error");
+      }
+    } else {
+      // No encryption - upload plaintext files
+      try {
+        setUploadState("uploading");
+        await startUpload(selectedFiles, { expiryDuration, bundleId });
+      } catch (err) {
+        console.error("Upload error:", err);
+        // Let onUploadError be the single source of truth for error messages
+        // setErrorMessage("Upload failed. Please try again.");
+        setUploadState("error");
+      }
+    }
   };
 
   const resetUpload = () => {
     setUploadState("idle");
     setSelectedFiles([]);
     setUploadProgress(0);
+    setEncryptionProgress(0);
     setErrorMessage("");
     setPassphrase("");
     setShowPassphrase(false);
@@ -377,6 +547,12 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Passphrase (optional)
+                  {cryptoAvailable && (
+                    <span className="ml-2 inline-flex items-center gap-1 rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                      <Shield className="h-3 w-3" />
+                      E2E encrypted
+                    </span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
@@ -384,7 +560,11 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                     type={showPassphrase ? "text" : "password"}
                     value={passphrase}
                     onChange={(e) => setPassphrase(e.target.value)}
-                    placeholder="Leave empty for no password"
+                    placeholder={
+                      cryptoAvailable
+                        ? "Enter passphrase for encryption + protection"
+                        : "Enter passphrase for protection only"
+                    }
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-slate-800 dark:text-white dark:placeholder-gray-500"
                     autoComplete="off"
                   />
@@ -402,7 +582,9 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                   </button>
                 </div>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Use a long passphrase; {MIN_PASSPHRASE_LENGTH}+ characters recommended
+                  {cryptoAvailable && passphrase
+                    ? "Files will be encrypted in your browser before upload"
+                    : `Use a long passphrase; ${MIN_PASSPHRASE_LENGTH}+ characters recommended`}
                 </p>
               </div>
 
@@ -456,6 +638,31 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
+          </div>
+        );
+
+      case "encrypting":
+        return (
+          <div className="flex flex-col items-center justify-center py-8 w-full">
+            <div className="mb-4 rounded-full bg-purple-100 p-3 dark:bg-purple-900/30">
+              <Shield className="h-8 w-8 text-purple-600 dark:text-purple-400 animate-pulse" />
+            </div>
+            <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+              Encrypting files...
+            </h2>
+            <p className="mb-6 text-sm text-gray-500">
+              {encryptionProgress}% encrypted
+            </p>
+            
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
+              <div 
+                className="h-full bg-purple-600 transition-all duration-300 ease-out rounded-full"
+                style={{ width: `${encryptionProgress}%` }}
+              />
+            </div>
+            <p className="mt-4 text-xs text-gray-400">
+              End-to-end encryption in progress
+            </p>
           </div>
         );
 

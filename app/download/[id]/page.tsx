@@ -1,6 +1,7 @@
 import { BackgroundDecorations } from "@/components/background-decorations";
 import { BundleUnlockForm } from "@/components/bundle-unlock-form";
 import { CountdownTimer } from "@/components/countdown-timer";
+import { EncryptedBundleDownloader } from "@/components/encrypted-bundle-downloader";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import {
@@ -28,7 +29,16 @@ interface FileMetadata {
   mimetype: string;
   createdAt: number;
   expiresAt: number;
-  uploadThingUrl: string;
+  uploadThingUrl?: string;
+  downloadUrl?: string;
+  // E2E encryption fields
+  isEncrypted?: boolean;
+  encryptedMetadataB64?: string;
+  encryptedMetadataIvB64?: string;
+  wrappedDekB64?: string;
+  wrappedDekIvB64?: string;
+  baseNonceB64?: string;
+  originalSize?: number;
 }
 
 interface BundleMetadata {
@@ -40,6 +50,12 @@ interface BundleMetadata {
   isPasswordProtected: boolean;
   isUnlocked: boolean;
   files: FileMetadata[];
+  // E2E encryption fields
+  isEncrypted?: boolean;
+  encryptionSaltB64?: string;
+  encryptionIterations?: number;
+  encryptionChunkSize?: number;
+  unlockSaltB64?: string;
 }
 
 interface BundleError {
@@ -131,8 +147,25 @@ export default async function DownloadPage({ params }: PageProps) {
 
                 <div className="p-6 md:p-8">
                   {metadata.isPasswordProtected && !metadata.isUnlocked ? (
-                    <BundleUnlockForm bundleId={id} />
+                    <BundleUnlockForm
+                      bundleId={id}
+                      isEncrypted={metadata.isEncrypted}
+                      unlockSaltB64={metadata.unlockSaltB64}
+                      encryptionIterations={metadata.encryptionIterations}
+                    />
+                  ) : metadata.isEncrypted &&
+                    metadata.encryptionSaltB64 &&
+                    metadata.encryptionIterations &&
+                    metadata.encryptionChunkSize ? (
+                    // **E2E ENCRYPTED BUNDLE**: Show decryption interface
+                    <EncryptedBundleDownloader
+                      files={metadata.files}
+                      encryptionSaltB64={metadata.encryptionSaltB64}
+                      encryptionIterations={metadata.encryptionIterations}
+                      encryptionChunkSize={metadata.encryptionChunkSize}
+                    />
                   ) : (
+                    // **PLAINTEXT BUNDLE**: Show normal download interface
                     <>
                       <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-slate-900/50">
                     <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700">

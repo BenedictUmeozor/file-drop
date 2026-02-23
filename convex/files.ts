@@ -15,6 +15,14 @@ export const saveFile = mutation({
     expiresAt: v.number(),
     uploadThingKey: v.string(),
     uploadThingUrl: v.string(),
+    // E2E encryption fields
+    isEncrypted: v.optional(v.boolean()),
+    encryptedMetadataB64: v.optional(v.string()),
+    encryptedMetadataIvB64: v.optional(v.string()),
+    wrappedDekB64: v.optional(v.string()),
+    wrappedDekIvB64: v.optional(v.string()),
+    baseNonceB64: v.optional(v.string()),
+    originalSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const id = await ctx.db.insert("files", {
@@ -27,6 +35,13 @@ export const saveFile = mutation({
       expiresAt: args.expiresAt,
       uploadThingKey: args.uploadThingKey,
       uploadThingUrl: args.uploadThingUrl,
+      isEncrypted: args.isEncrypted,
+      encryptedMetadataB64: args.encryptedMetadataB64,
+      encryptedMetadataIvB64: args.encryptedMetadataIvB64,
+      wrappedDekB64: args.wrappedDekB64,
+      wrappedDekIvB64: args.wrappedDekIvB64,
+      baseNonceB64: args.baseNonceB64,
+      originalSize: args.originalSize,
     });
     return id;
   },
@@ -41,6 +56,13 @@ export const createBundle = mutation({
     expiresAt: v.number(),
     passphraseHash: v.optional(v.string()),
     serverToken: v.string(),
+    // E2E encryption fields
+    isEncrypted: v.optional(v.boolean()),
+    encryptionSaltB64: v.optional(v.string()),
+    encryptionIterations: v.optional(v.number()),
+    encryptionChunkSize: v.optional(v.number()),
+    unlockSaltB64: v.optional(v.string()),
+    unlockVerifierB64: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Verify server token
@@ -60,7 +82,8 @@ export const createBundle = mutation({
       throw new Error("Invalid expiresAt: must be after createdAt");
     }
 
-    const isPasswordProtected = !!args.passphraseHash;
+    // Bundle is password protected if it has passphraseHash OR unlockVerifier
+    const isPasswordProtected = !!(args.passphraseHash || args.unlockVerifierB64);
 
     const id = await ctx.db.insert("bundles", {
       bundleId: args.bundleId,
@@ -69,13 +92,20 @@ export const createBundle = mutation({
       createdAt: args.createdAt,
       expiresAt: args.expiresAt,
       isPasswordProtected,
+      isEncrypted: args.isEncrypted,
+      encryptionSaltB64: args.encryptionSaltB64,
+      encryptionIterations: args.encryptionIterations,
+      encryptionChunkSize: args.encryptionChunkSize,
     });
 
-    if (args.passphraseHash) {
+    // Store secrets if either passphraseHash or unlockVerifier is present
+    if (args.passphraseHash || args.unlockVerifierB64) {
       await ctx.db.insert("bundleSecrets", {
         bundleId: args.bundleId,
         passphraseHash: args.passphraseHash,
         createdAt: args.createdAt,
+        unlockSaltB64: args.unlockSaltB64,
+        unlockVerifierB64: args.unlockVerifierB64,
       });
     }
 

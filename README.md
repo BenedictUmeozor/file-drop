@@ -11,7 +11,9 @@
 ## ✨ Features
 
 - **Multi-file Upload** — Share up to 10 files (200MB total) in one go
+- **End-to-End Encryption** — Optional client-side encryption with zero-knowledge architecture
 - **Zero Authentication** — No sign-up, no login, just upload and share
+- **Password Protection** — Secure your bundles with Argon2id hashing
 - **QR Code Sharing** — Scan to download on any device
 - **Auto-Expiry** — Files automatically delete after 10, 30, or 60 minutes
 - **Bulk Download** — Download all files as a ZIP or individually
@@ -63,9 +65,16 @@
    UPLOADTHING_TOKEN=your_uploadthing_token
    CRON_SECRET=your_cron_secret
    BUNDLE_AUTH_SERVER_TOKEN=your_random_secret_token
+   E2E_UNLOCK_VERIFIER_SECRET=your_64_char_hex_secret
    ```
 
    > **Password Protection:** See [PASSWORD_PROTECTION_SETUP.md](PASSWORD_PROTECTION_SETUP.md) for details on `BUNDLE_AUTH_SERVER_TOKEN`.
+   >
+   > **E2E Encryption:** Generate `E2E_UNLOCK_VERIFIER_SECRET` with:
+   > ```bash
+   > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   > ```
+   > This secret is critical for zero-knowledge unlock verification. Keep it secure!
 
 4. **Start the development server**
 

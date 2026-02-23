@@ -3,14 +3,26 @@
 import { Eye, EyeOff, Lock, Loader2, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  deriveUnlockProof,
+  base64UrlToArrayBuffer,
+  DEFAULT_PBKDF2_ITERATIONS,
+  isWebCryptoAvailable,
+} from "@/lib/crypto";
 
 interface BundleUnlockFormProps {
   bundleId: string;
+  isEncrypted?: boolean;
+  unlockSaltB64?: string;
+  encryptionIterations?: number;
   onUnlocked?: () => void;
 }
 
 export function BundleUnlockForm({
   bundleId,
+  isEncrypted = false,
+  unlockSaltB64,
+  encryptionIterations,
   onUnlocked,
 }: BundleUnlockFormProps) {
   const router = useRouter();
@@ -33,13 +45,33 @@ export function BundleUnlockForm({
     setIsSubmitting(true);
 
     try {
+      // SECURITY FIX: For encrypted bundles, derive and send unlockProof instead of passphrase
+      let requestBody: { passphrase?: string; unlockProof?: string };
+      
+      if (isEncrypted && unlockSaltB64 && isWebCryptoAvailable()) {
+        // Encrypted bundle: derive unlock proof using zero-knowledge protocol
+        const unlockSalt = new Uint8Array(
+          base64UrlToArrayBuffer(unlockSaltB64)
+        );
+        const iterations = encryptionIterations || DEFAULT_PBKDF2_ITERATIONS;
+        const unlockProof = await deriveUnlockProof(
+          passphrase,
+          unlockSalt,
+          iterations
+        );
+        requestBody = { unlockProof };
+      } else {
+        // Non-encrypted bundle: send passphrase (legacy flow)
+        requestBody = { passphrase };
+      }
+
       const response = await fetch(`/api/bundle/${bundleId}/unlock`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ passphrase }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.status === 204) {

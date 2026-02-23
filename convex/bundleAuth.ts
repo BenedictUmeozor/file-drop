@@ -27,6 +27,8 @@ export const getBundleSecretForServer = query({
 
     return {
       passphraseHash: secret.passphraseHash,
+      unlockSaltB64: secret.unlockSaltB64,
+      unlockVerifierB64: secret.unlockVerifierB64,
     };
   },
 });
