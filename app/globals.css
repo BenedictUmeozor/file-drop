@@ -54,6 +54,44 @@
       height: 0;
     }
   }
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-elevated: var(--shadow-elevated);
+
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-fade-in-up: fade-in-up 0.5s ease-out;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes scale-in {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes fade-in-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
 }
 
 /*
@@ -99,6 +137,20 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.5rem;
+
+  --fd-accent: oklch(0.6 0.118 184.704);
+  --fd-accent-2: oklch(0.7 0.1 200);
+  --fd-accent-foreground: oklch(0.985 0 0);
+  --fd-success: oklch(0.6 0.15 150);
+  --fd-warning: oklch(0.7 0.15 50);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-elevated: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  --gradient-brand: linear-gradient(to right, var(--primary), var(--chart-2));
+  --gradient-subtle: linear-gradient(to right, var(--muted), var(--background));
 }
 
 .dark {
@@ -126,6 +178,20 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+
+  --fd-accent: oklch(0.6 0.118 184.704);
+  --fd-accent-2: oklch(0.7 0.1 200);
+  --fd-accent-foreground: oklch(0.985 0 0);
+  --fd-success: oklch(0.5 0.15 150);
+  --fd-warning: oklch(0.6 0.15 50);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --shadow-elevated: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+
+  --gradient-brand: linear-gradient(to right, var(--primary), var(--chart-2));
+  --gradient-subtle: linear-gradient(to right, var(--muted), var(--background));
 }
 
 @layer base {
@@ -134,5 +200,52 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-md bg-background/60 border border-border/50;
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-brand);
+  }
+  .fd-glass {
+    @apply backdrop-blur-xl bg-background/70 border border-border/60 shadow-sm;
+  }
+  .fd-surface {
+    @apply bg-card/80 border border-border/60 shadow-sm backdrop-blur-sm;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer components {
+  .fd-h1 {
+    @apply text-4xl font-extrabold tracking-tight lg:text-5xl;
+  }
+  .fd-h2 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+  .fd-lead {
+    @apply text-xl text-muted-foreground;
+  }
+  .fd-kicker {
+    @apply text-sm font-medium text-primary uppercase tracking-wider;
+  }
+  .fd-caption {
+    @apply text-sm text-muted-foreground;
   }
 }

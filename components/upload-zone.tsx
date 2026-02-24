@@ -182,7 +182,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         const fieldErrors = error.data.zodError.fieldErrors;
         if (fieldErrors && Object.keys(fieldErrors).length > 0) {
           const firstField = Object.keys(fieldErrors)[0];
-          const firstError = fieldErrors[firstField]?.[0];
+          const firstError = (fieldErrors as Record<string, string[]>)[firstField]?.[0];
           userMessage = `Validation error: ${firstError || "Invalid encryption data"}`;
         }
       } else if (errorMsg.includes("file size") || errorMsg.includes("too large")) {
@@ -460,13 +460,16 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     switch (uploadState) {
       case "dragging":
         return (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="mb-4 rounded-full bg-primary/10 p-4 ring-1 ring-primary/20">
+          <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-4 rounded-full bg-primary/10 p-4 ring-4 ring-primary/20 shadow-lg shadow-primary/10">
               <Upload className="h-8 w-8 text-primary animate-bounce" />
             </div>
-            <h2 className="text-lg font-semibold tracking-tight">
-              Drop files here
+            <h2 className="text-xl font-semibold tracking-tight text-primary">
+              Drop files to upload
             </h2>
+            <p className="mt-2 text-sm text-primary/80">
+              Release to start the secure transfer
+            </p>
           </div>
         );
 
@@ -501,7 +504,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
             </CardHeader>
             
             <CardContent className="px-0 py-0 space-y-4">
-              <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-2">
+              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2">
                 {selectedFiles.map((file, index) => (
                   <div
                     key={`${file.name}-${index}`}
@@ -663,20 +666,27 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
       case "uploading":
         return (
-          <div className="flex flex-col items-center justify-center py-8 w-full max-w-xs mx-auto text-center space-y-6">
+          <div className="flex flex-col items-center justify-center py-8 w-full max-w-xs mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
             <div className="relative">
               <div className="absolute inset-0 flex items-center justify-center">
                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
               <svg className="h-20 w-20 -rotate-90 transform text-muted/20" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" />
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--color-primary)" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * uploadProgress) / 100} className="transition-all duration-300 ease-out" />
               </svg>
             </div>
             
             <div className="space-y-2 w-full">
-              <h2 className="text-lg font-semibold tracking-tight">Uploading...</h2>
+              <div className="flex items-center justify-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <h2 className="text-lg font-semibold tracking-tight">Uploading to FileDrop...</h2>
+              </div>
               <Progress value={uploadProgress} className="h-2 w-full" />
-              <p className="text-sm text-muted-foreground tabular-nums">
+              <p className="text-sm font-medium text-muted-foreground tabular-nums">
                 {Math.round(uploadProgress)}% complete
               </p>
             </div>
@@ -685,16 +695,19 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
       case "encrypting":
         return (
-          <div className="flex flex-col items-center justify-center py-8 w-full max-w-xs mx-auto text-center space-y-6">
-            <div className="mb-2 rounded-full bg-primary/10 p-4 ring-1 ring-primary/20">
+          <div className="flex flex-col items-center justify-center py-8 w-full max-w-xs mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            <div className="mb-2 rounded-full bg-primary/10 p-4 ring-2 ring-primary/20 shadow-[0_0_30px_-5px_var(--color-primary)]">
               <Shield className="h-8 w-8 text-primary animate-pulse" />
             </div>
             
             <div className="space-y-2 w-full">
-              <h2 className="text-lg font-semibold tracking-tight">Encrypting files...</h2>
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <h2 className="text-lg font-semibold tracking-tight">Encrypting locally...</h2>
+              </div>
               <Progress value={encryptionProgress} className="h-2 w-full [&>div]:bg-primary" />
-              <p className="text-sm text-muted-foreground animate-pulse">
-                Preparing secure package...
+              <p className="text-sm font-medium text-muted-foreground animate-pulse">
+                Securing your files before upload
               </p>
             </div>
           </div>
@@ -702,13 +715,13 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
       case "success":
         return (
-          <div className="flex flex-col items-center justify-center py-10 text-center space-y-6">
-            <div className="rounded-full bg-secondary p-4 ring-1 ring-border">
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+            <div className="rounded-full bg-emerald-500/10 p-4 ring-4 ring-emerald-500/20 shadow-lg shadow-emerald-500/10">
               <CheckCircle2 className="h-10 w-10 text-emerald-500 dark:text-emerald-400" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">Upload Complete!</h2>
-              <p className="text-muted-foreground text-sm">
+              <h2 className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">Upload Complete!</h2>
+              <p className="text-muted-foreground text-sm font-medium">
                 Redirecting to your secure share link...
               </p>
             </div>
@@ -717,15 +730,15 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
 
       case "error":
         return (
-          <div className="flex flex-col items-center justify-center py-6 w-full space-y-6">
-            <div className="rounded-full bg-destructive/10 p-4 ring-1 ring-destructive/20">
+          <div className="flex flex-col items-center justify-center py-6 w-full space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            <div className="rounded-full bg-destructive/10 p-4 ring-4 ring-destructive/20 shadow-lg shadow-destructive/10">
               <AlertCircle className="h-10 w-10 text-destructive" />
             </div>
             
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold tracking-tight">Upload Failed</h2>
+              <h2 className="text-xl font-bold tracking-tight text-destructive">Upload Failed</h2>
               <Alert variant="destructive" className="mx-auto max-w-sm border-0 bg-transparent p-0 text-center">
-                 <AlertDescription>
+                 <AlertDescription className="font-medium">
                    {errorMessage}
                  </AlertDescription>
               </Alert>
@@ -733,7 +746,11 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
             
             <Button 
               variant="outline" 
-              onClick={resetUpload}
+              onClick={(e) => {
+                e.stopPropagation();
+                resetUpload();
+              }}
+              className="hover:bg-destructive hover:text-destructive-foreground transition-colors"
             >
               Try Again
             </Button>
@@ -743,15 +760,15 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
       default:
         // Idle state
         return (
-          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <div className="rounded-full bg-muted p-4 ring-1 ring-border">
-              <CloudUpload className="h-8 w-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-16 text-center space-y-5 transition-transform duration-300 group-hover:scale-[1.02]">
+            <div className="rounded-full bg-muted/50 p-5 ring-1 ring-border/50 transition-all duration-300 group-hover:bg-primary/10 group-hover:ring-primary/30 group-hover:shadow-lg group-hover:shadow-primary/5">
+              <CloudUpload className="h-10 w-10 text-muted-foreground transition-colors duration-300 group-hover:text-primary" />
             </div>
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold tracking-tight">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold tracking-tight">
                 Click to upload or drag & drop
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground">
                 Up to {MAX_FILE_COUNT} files, {formatFileSize(MAX_FILE_SIZE)} limit
               </p>
             </div>
@@ -759,7 +776,8 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
             <Button
               variant="secondary"
               size="sm"
-               onClick={(e) => {
+              className="mt-2 transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground"
+              onClick={(e) => {
                 e.stopPropagation();
                 open();
               }}
@@ -775,15 +793,21 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     <Card
       {...getRootProps({
         className: cn(
-           "relative flex min-h-[400px] w-full cursor-pointer flex-col items-center justify-center transition-all duration-200 outline-none hover:bg-muted/50",
-           uploadState === "dragging" && "border-primary bg-primary/5 ring-1 ring-primary",
-           uploadState === "success" && "border-border bg-card",
-           uploadState === "error" && "border-destructive/50 bg-destructive/5",
-           (uploadState === "ready" || uploadState === "uploading" || uploadState === "encrypting") && "cursor-default border-border bg-card hover:bg-card"
+           "group relative flex min-h-[220px] w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300 outline-none",
+           uploadState === "idle" && "border-border/60 bg-card/50 hover:border-primary/50 hover:bg-primary/[0.02]",
+           uploadState === "dragging" && "border-primary bg-primary/5 ring-4 ring-primary/10 scale-[1.02]",
+           uploadState === "success" && "border-emerald-500/50 bg-emerald-500/5 cursor-default",
+           uploadState === "error" && "border-destructive/50 bg-destructive/5 cursor-default",
+           (uploadState === "ready" || uploadState === "uploading" || uploadState === "encrypting") && "cursor-default border-border/60 bg-card/80 shadow-sm"
         ),
       })}
     >
-      <CardContent className="flex flex-col items-center justify-center w-full p-6">
+      {/* Shimmer effect for uploading/encrypting */}
+      {(uploadState === "uploading" || uploadState === "encrypting") && (
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(45deg,transparent_25%,rgba(68,255,255,0.05)_50%,transparent_75%,transparent_100%)] bg-size-[250%_250%,100%_100%] animate-shimmer" />
+      )}
+      
+      <CardContent className="flex flex-col items-center justify-center w-full p-6 z-10">
          <input {...getInputProps()} />
          {renderContent()}
       </CardContent>
