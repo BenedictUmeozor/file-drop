@@ -2,13 +2,14 @@
 
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { Button, ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-interface CopyButtonProps {
+interface CopyButtonProps extends ButtonProps {
   text: string;
-  className?: string;
 }
 
-export function CopyButton({ text, className = "" }: CopyButtonProps) {
+export function CopyButton({ text, className, variant = "outline", size = "icon", ...props }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -22,25 +23,20 @@ export function CopyButton({ text, className = "" }: CopyButtonProps) {
   };
 
   return (
-    <button
+    <Button
+      variant={variant}
+      size={size}
       onClick={handleCopy}
-      className={`relative inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all active:scale-95 ${
-        copied
-          ? "border-green-600 bg-green-500 text-white shadow-sm dark:border-green-400"
-          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 shadow-sm dark:border-gray-700 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
-      } ${className}`}
+      className={cn("shrink-0 transition-all", className)}
+      type="button"
+      {...props}
     >
       {copied ? (
-        <>
-          <Check className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only">Copied!</span>
-        </>
+        <Check className="h-4 w-4 text-primary animate-in zoom-in spin-in-90 duration-300" />
       ) : (
-        <>
-          <Copy className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only">Copy</span>
-        </>
+        <Copy className="h-4 w-4" />
       )}
-    </button>
+      <span className="sr-only">{copied ? "Copied" : "Copy"}</span>
+    </Button>
   );
 }

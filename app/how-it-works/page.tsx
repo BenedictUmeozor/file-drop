@@ -1,5 +1,13 @@
-"use client";
-
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import {
@@ -13,7 +21,14 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
-import Link from "next/link";
+
+/**
+ * HowItWorks Page
+ *
+ * Implements a clean, documentation-style layout using shadcn/ui components.
+ * Removes custom animations and gradients in favor of a semantic,
+ * improved readability approach.
+ */
 
 const steps = [
   {
@@ -76,115 +91,88 @@ const features = [
 
 export default function HowItWorks() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
+      
+      <main className="container mx-auto flex-1 px-4 py-16 md:py-24">
+        {/* Hero Section */}
+        <section className="mb-16 space-y-6 text-center md:mb-24 md:text-left text-balance">
+          <Badge variant="outline" className="mb-4">
+            How it works
+          </Badge>
+          <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
+            Simple, secure file sharing
+          </h1>
+          <p className="max-w-[700px] text-lg text-muted-foreground md:text-xl">
+            Share files in seconds. No sign-up, no hassle.
+            Securely transfer documents, photos, and videos to any device.
+          </p>
+        </section>
 
-      <main className="relative flex grow flex-col items-center overflow-hidden px-4 py-12 pt-24 md:py-16 md:pt-28">
-        <div
-          className="bg-primary/5 dark:bg-primary/10 pointer-events-none absolute top-1/4 -left-20 h-72 w-72 rounded-full mix-blend-multiply blur-[100px] dark:mix-blend-normal"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -right-20 bottom-1/4 h-80 w-80 rounded-full bg-blue-400/5 mix-blend-multiply blur-[100px] dark:bg-blue-500/10 dark:mix-blend-normal"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 flex w-full max-w-4xl flex-col gap-16">
-          <div className="animate-fade-in-up space-y-4 text-center">
-            <h1 className="text-4xl leading-[1.1] font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white">
-              How it{" "}
-              <span className="text-primary relative inline-block">
-                works
-                <svg
-                  className="text-primary/20 absolute -bottom-1 left-0 h-3 w-full"
-                  preserveAspectRatio="none"
-                  viewBox="0 0 100 10"
-                >
-                  <path
-                    d="M0 5 Q 50 10 100 5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                  />
-                </svg>
-              </span>
-            </h1>
-            <p className="mx-auto max-w-md text-lg leading-relaxed text-slate-500 dark:text-slate-400">
-              Share files in seconds. No sign-up, no hassle.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {steps.map((step, index) => (
-              <div
-                key={step.number}
-                className="shadow-soft group transform rounded-2xl border border-slate-100 bg-white p-6 transition-all hover:shadow-lg dark:border-slate-700/50 dark:bg-[#2b3036] dark:shadow-none"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-                    <step.icon className="h-6 w-6" />
+        {/* Steps Section */}
+        <section className="mb-16 md:mb-24">
+          <h2 className="mb-8 text-2xl font-semibold tracking-tight">
+            The process
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step) => (
+              <Card key={step.number} className="relative overflow-hidden">
+                <CardHeader>
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
+                    {step.number}
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
-                        Step {step.number}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <step.icon className="h-5 w-5 text-muted-foreground" />
+                    {step.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base text-muted-foreground/90">
+                    {step.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
             ))}
           </div>
+        </section>
 
-          <div className="space-y-8">
-            <h2 className="text-center text-2xl font-bold text-slate-900 dark:text-white">
-              Why FileDrop?
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="group flex items-start gap-3 rounded-xl border border-slate-100 bg-white/50 p-4 transition-all hover:border-slate-200 hover:bg-white dark:border-slate-700/50 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:hover:bg-slate-800"
-                >
-                  <div className="text-primary mt-0.5">
-                    <feature.icon className="h-5 w-5" />
+        {/* Features Section */}
+        <section>
+          <h2 className="mb-8 text-2xl font-semibold tracking-tight">
+            Why FileDrop?
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <Card key={feature.title} className="bg-muted/40">
+                <CardHeader>
+                  <div className="mb-2 w-fit rounded-md bg-background p-2 ring-1 ring-border">
+                    <feature.icon className="h-5 w-5 text-foreground" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  <CardTitle className="text-lg">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        </section>
 
-          <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-slate-500 dark:text-slate-400">
-              Ready to share your first file?
-            </p>
-            <Link
-              href="/"
-              className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl"
-            >
-              <Upload className="h-5 w-5" />
-              Start sharing
-            </Link>
-          </div>
-        </div>
+        {/* CTA */}
+        <section className="py-16 text-center">
+          <h2 className="text-2xl font-bold tracking-tight mb-3">Ready to share files securely?</h2>
+          <p className="text-muted-foreground mb-6">No account needed. Files are encrypted in your browser before upload.</p>
+          <Button asChild size="lg">
+            <Link href="/">Start sharing</Link>
+          </Button>
+        </section>
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

@@ -3,22 +3,54 @@
 import { useUploadThing } from "@/lib/uploadthing-client";
 import {
   Check,
-  Clock,
+  CheckCircle2,
   CloudUpload,
   Eye,
   EyeOff,
-  File,
-  Files,
+  File as FileIcon,
+  FileText,
+  FileImage,
+  FileVideo,
+  FileAudio,
+  FileArchive,
   Loader2,
   Trash2,
   Upload,
   X,
   Shield,
+  ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import {
+  Button,
+  buttonVariants,
+} from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import {
   generateSalt,
   deriveKeysFromPassphrase,
@@ -428,11 +460,11 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     switch (uploadState) {
       case "dragging":
         return (
-          <div className="flex flex-col items-center justify-center py-10">
-            <div className="mb-4 rounded-full bg-primary/10 p-4">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 rounded-full bg-primary/10 p-4 ring-1 ring-primary/20">
               <Upload className="h-8 w-8 text-primary animate-bounce" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold tracking-tight">
               Drop files here
             </h2>
           </div>
@@ -442,158 +474,169 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
         const isNearLimit = totalSize / MAX_FILE_SIZE > 0.8;
         return (
-          <div className="w-full">
-            <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-700">
-              <div className="flex items-center gap-2">
-                <Files className="h-4 w-4 text-gray-500" />
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""}
-                </span>
-                <span
-                  className={`text-sm ${isNearLimit ? "text-amber-500" : "text-gray-400"}`}
-                >
-                  ({formatFileSize(totalSize)} / 200MB)
-                </span>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  resetUpload();
-                }}
-                className="text-sm text-gray-400 hover:text-red-500 transition-colors"
-                type="button"
-              >
-                Clear all
-              </button>
-            </div>
-
-            <div className="mb-4 max-h-48 space-y-1 overflow-y-auto">
-              {selectedFiles.map((file, index) => (
-                <div
-                  key={`${file.name}-${index}`}
-                  className="group flex items-center justify-between rounded-md p-2 hover:bg-gray-50 dark:hover:bg-slate-800"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <File className="h-4 w-4 text-gray-400" />
-                    <span className="truncate text-sm text-gray-700 dark:text-gray-300">
-                      {file.name}
-                    </span>
-                    <span className="shrink-0 text-xs text-gray-400">
-                      {formatFileSize(file.size)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="ml-2 opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                    type="button"
-                    aria-label={`Remove ${file.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+          <Card className="w-full border-0 shadow-none bg-transparent">
+            <CardHeader className="px-0 pt-0 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-base font-medium flex items-center gap-2">
+                    <FileIcon className="h-4 w-4 text-muted-foreground" />
+                    {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""} selected
+                  </CardTitle>
+                  <CardDescription className={cn(isNearLimit && "text-muted-foreground font-medium")}>
+                    {formatFileSize(totalSize)} / 200MB
+                  </CardDescription>
                 </div>
-              ))}
-            </div>
-
-            {selectedFiles.length < MAX_FILE_COUNT && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  open();
-                }}
-                className="mb-6 w-full rounded-lg border border-dashed border-gray-300 py-2 text-sm text-gray-500 hover:border-primary hover:text-primary transition-colors dark:border-gray-600"
-                type="button"
-              >
-                + Add more files
-              </button>
-            )}
-
-            <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-              <div
-                className="flex items-center justify-between"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Auto-delete after:
-                  </span>
-                </div>
-                <select
-                  value={expiryDuration}
-                  onChange={(e) => {
-                    const newValue = Number(e.target.value);
-                    setExpiryDuration(newValue);
-                    const option = EXPIRY_OPTIONS.find(
-                      (opt) => opt.value === newValue,
-                    );
-                    if (option && onExpiryChange) {
-                      onExpiryChange(option.label);
-                    }
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    resetUpload();
                   }}
-                  className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-slate-800 dark:text-gray-300"
+                  className="h-8 text-muted-foreground hover:text-destructive"
                 >
-                  {EXPIRY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  Clear all
+                </Button>
               </div>
-
-              <div onClick={(e) => e.stopPropagation()}>
-                <label
-                  htmlFor="passphrase"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Passphrase (optional)
-                  {cryptoAvailable && (
-                    <span className="ml-2 inline-flex items-center gap-1 rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                      <Shield className="h-3 w-3" />
-                      E2E encrypted
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <input
-                    id="passphrase"
-                    type={showPassphrase ? "text" : "password"}
-                    value={passphrase}
-                    onChange={(e) => setPassphrase(e.target.value)}
-                    placeholder={
-                      cryptoAvailable
-                        ? "Enter passphrase for encryption + protection"
-                        : "Enter passphrase for protection only"
-                    }
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-slate-800 dark:text-white dark:placeholder-gray-500"
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassphrase(!showPassphrase)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    tabIndex={-1}
+            </CardHeader>
+            
+            <CardContent className="px-0 py-0 space-y-4">
+              <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-2">
+                {selectedFiles.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="group flex items-center justify-between rounded-lg border bg-card/50 p-3 text-sm transition-colors hover:bg-muted/50"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {showPassphrase ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {cryptoAvailable && passphrase
-                    ? "Files will be encrypted in your browser before upload"
-                    : `Use a long passphrase; ${MIN_PASSPHRASE_LENGTH}+ characters recommended`}
-                </p>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="rounded-md bg-muted p-2">
+                        <FileIcon className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col truncate">
+                        <span className="truncate font-medium text-foreground">
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatFileSize(file.size)}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFile(index)}
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Remove {file.name}</span>
+                    </Button>
+                  </div>
+                ))}
               </div>
 
-              <button
+              {selectedFiles.length < MAX_FILE_COUNT && (
+                 <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed text-muted-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                 >
+                   <CloudUpload className="mr-2 h-4 w-4" /> Add more files
+                 </Button>
+              )}
+
+              <Separator />
+
+              <div className="grid gap-4 pt-2" onClick={(e) => e.stopPropagation()}>
+                <div className="grid gap-2">
+                  <Label htmlFor="expiry" className="text-sm font-medium">
+                    Auto-delete after
+                  </Label>
+                  <Select
+                    value={expiryDuration.toString()}
+                    onValueChange={(val) => {
+                      const newValue = Number(val);
+                      setExpiryDuration(newValue);
+                      const option = EXPIRY_OPTIONS.find((opt) => opt.value === newValue);
+                      if (option && onExpiryChange) {
+                        onExpiryChange(option.label);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="expiry" className="w-full">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EXPIRY_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="passphrase" className="text-sm font-medium">
+                      Passphrase
+                    </Label>
+                    {cryptoAvailable && (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-normal gap-1 text-primary bg-primary/10 hover:bg-primary/20 border-primary/20">
+                        <ShieldCheck className="h-3 w-3" />
+                         E2E Encrypted
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="passphrase"
+                      type={showPassphrase ? "text" : "password"}
+                      value={passphrase}
+                      onChange={(e) => setPassphrase(e.target.value)}
+                      placeholder={
+                        cryptoAvailable
+                          ? "Enter passphrase for encryption"
+                          : "Enter passphrase (optional)"
+                      }
+                      className="pr-10"
+                      autoComplete="off"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowPassphrase(!showPassphrase)}
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    >
+                      {showPassphrase ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="sr-only">Toggle password visibility</span>
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {cryptoAvailable && passphrase
+                      ? "Files will be encrypted in your browser before upload"
+                      : "Optional protection for your download link"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardFooter className="px-0 pt-2 pb-0">
+               <Button 
+                className="w-full" 
+                size="lg"
                 onClick={(e) => {
                   e.stopPropagation();
-                  
-                  // Validate passphrase if provided
-                  if (passphrase.length > 0) {
+                   // Validate passphrase if provided
+                   if (passphrase.length > 0) {
                     if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
                       setErrorMessage(
                         `Passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters`
@@ -609,152 +652,141 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
                       return;
                     }
                   }
-                  
                   startFilesUpload();
                 }}
-                className="w-full rounded-lg bg-primary px-4 py-2.5 font-semibold text-white shadow-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                type="button"
-              >
-                Upload Files
-              </button>
-            </div>
-          </div>
+               >
+                 Upload Files
+               </Button>
+            </CardFooter>
+          </Card>
         );
 
       case "uploading":
         return (
-          <div className="flex flex-col items-center justify-center py-8 w-full">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-            <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
-              Uploading...
-            </h2>
-            <p className="mb-6 text-sm text-gray-500">
-              {uploadProgress}% complete
-            </p>
+          <div className="flex flex-col items-center justify-center py-8 w-full max-w-xs mx-auto text-center space-y-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+              <svg className="h-20 w-20 -rotate-90 transform text-muted/20" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" />
+              </svg>
+            </div>
             
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
-              <div 
-                className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
-                style={{ width: `${uploadProgress}%` }}
-              />
+            <div className="space-y-2 w-full">
+              <h2 className="text-lg font-semibold tracking-tight">Uploading...</h2>
+              <Progress value={uploadProgress} className="h-2 w-full" />
+              <p className="text-sm text-muted-foreground tabular-nums">
+                {Math.round(uploadProgress)}% complete
+              </p>
             </div>
           </div>
         );
 
       case "encrypting":
         return (
-          <div className="flex flex-col items-center justify-center py-8 w-full">
-            <div className="mb-4 rounded-full bg-purple-100 p-3 dark:bg-purple-900/30">
-              <Shield className="h-8 w-8 text-purple-600 dark:text-purple-400 animate-pulse" />
+          <div className="flex flex-col items-center justify-center py-8 w-full max-w-xs mx-auto text-center space-y-6">
+            <div className="mb-2 rounded-full bg-primary/10 p-4 ring-1 ring-primary/20">
+              <Shield className="h-8 w-8 text-primary animate-pulse" />
             </div>
-            <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
-              Encrypting files...
-            </h2>
-            <p className="mb-6 text-sm text-gray-500">
-              {encryptionProgress}% encrypted
-            </p>
             
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
-              <div 
-                className="h-full bg-purple-600 transition-all duration-300 ease-out rounded-full"
-                style={{ width: `${encryptionProgress}%` }}
-              />
+            <div className="space-y-2 w-full">
+              <h2 className="text-lg font-semibold tracking-tight">Encrypting files...</h2>
+              <Progress value={encryptionProgress} className="h-2 w-full [&>div]:bg-primary" />
+              <p className="text-sm text-muted-foreground animate-pulse">
+                Preparing secure package...
+              </p>
             </div>
-            <p className="mt-4 text-xs text-gray-400">
-              End-to-end encryption in progress
-            </p>
           </div>
         );
 
       case "success":
         return (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="mb-4 rounded-full bg-green-100 p-3 dark:bg-green-900/30">
-              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-6">
+            <div className="rounded-full bg-secondary p-4 ring-1 ring-border">
+              <CheckCircle2 className="h-10 w-10 text-emerald-500 dark:text-emerald-400" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Upload Complete!
-            </h2>
-            <p className="text-sm text-gray-500 mt-2">
-              Redirecting to your share link...
-            </p>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Upload Complete!</h2>
+              <p className="text-muted-foreground text-sm">
+                Redirecting to your secure share link...
+              </p>
+            </div>
           </div>
         );
 
       case "error":
         return (
-          <div className="flex flex-col items-center justify-center py-6 w-full">
-            <div className="mb-4 rounded-full bg-red-50 p-3 dark:bg-red-900/20">
-              <X className="h-8 w-8 text-red-500" />
+          <div className="flex flex-col items-center justify-center py-6 w-full space-y-6">
+            <div className="rounded-full bg-destructive/10 p-4 ring-1 ring-destructive/20">
+              <AlertCircle className="h-10 w-10 text-destructive" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-              Upload Failed
-            </h2>
-            <div className="mt-2 mb-6 rounded-md bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600 w-full text-center dark:bg-red-900/10 dark:border-red-900/20">
-              {errorMessage}
+            
+            <div className="text-center space-y-2">
+              <h2 className="text-lg font-semibold tracking-tight">Upload Failed</h2>
+              <Alert variant="destructive" className="mx-auto max-w-sm border-0 bg-transparent p-0 text-center">
+                 <AlertDescription>
+                   {errorMessage}
+                 </AlertDescription>
+              </Alert>
             </div>
-            <button
+            
+            <Button 
+              variant="outline" 
               onClick={resetUpload}
-              className="rounded-lg bg-gray-900 px-6 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900"
-              type="button"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         );
 
       default:
         // Idle state
         return (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="mb-4 rounded-full bg-gray-50 p-4 border border-gray-100 dark:bg-slate-800 dark:border-slate-700">
-              <CloudUpload className="h-8 w-8 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+            <div className="rounded-full bg-muted p-4 ring-1 ring-border">
+              <CloudUpload className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              Click to upload or drag & drop
-            </h2>
-            <p className="text-sm text-gray-500 max-w-xs mx-auto mb-6">
-              Up to {MAX_FILE_COUNT} files, {formatFileSize(MAX_FILE_SIZE)} limit
-            </p>
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold tracking-tight">
+                Click to upload or drag & drop
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Up to {MAX_FILE_COUNT} files, {formatFileSize(MAX_FILE_SIZE)} limit
+              </p>
+            </div>
             
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
                onClick={(e) => {
                 e.stopPropagation();
                 open();
               }}
-              className="rounded-lg bg-white border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors shadow-sm dark:bg-slate-800 dark:border-slate-600 dark:text-gray-300"
-              type="button"
             >
               Select Files
-            </button>
+            </Button>
           </div>
         );
     }
   };
 
   return (
-    <div
+    <Card
       {...getRootProps({
-        className: `relative flex min-h-[400px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 transition-all duration-200 outline-none
-          ${
-            uploadState === "dragging"
-              ? "border-primary bg-primary/5"
-              : uploadState === "success"
-              ? "border-green-400"
-              : uploadState === "error"
-              ? "border-red-300"
-              : uploadState === "uploading"
-              ? "border-indigo-400"
-              : uploadState === "ready"
-              ? "border-gray-300"
-              : "border-gray-300 hover:border-primary/50 hover:bg-gray-50/50 dark:border-gray-700 dark:hover:bg-slate-800/50"
-          }
-          ${uploadState === "ready" || uploadState === "uploading" || uploadState === "success" || uploadState === "error" ? "cursor-default bg-white dark:bg-slate-800" : ""}
-        `,
+        className: cn(
+           "relative flex min-h-[400px] w-full cursor-pointer flex-col items-center justify-center transition-all duration-200 outline-none hover:bg-muted/50",
+           uploadState === "dragging" && "border-primary bg-primary/5 ring-1 ring-primary",
+           uploadState === "success" && "border-border bg-card",
+           uploadState === "error" && "border-destructive/50 bg-destructive/5",
+           (uploadState === "ready" || uploadState === "uploading" || uploadState === "encrypting") && "cursor-default border-border bg-card hover:bg-card"
+        ),
       })}
     >
-      <input {...getInputProps()} />
-      {renderContent()}
-    </div>
+      <CardContent className="flex flex-col items-center justify-center w-full p-6">
+         <input {...getInputProps()} />
+         {renderContent()}
+      </CardContent>
+    </Card>
   );
 }

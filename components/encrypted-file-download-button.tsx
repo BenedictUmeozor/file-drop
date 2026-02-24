@@ -8,6 +8,8 @@ import {
   decryptMetadata,
   type KeyDerivationParams,
 } from "@/lib/crypto";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EncryptedFileDownloadButtonProps {
   fileId: string;
@@ -133,29 +135,31 @@ export function EncryptedFileDownloadButton({
   return (
     <div className="flex flex-col gap-2">
       {error && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
+        <Alert variant="destructive" className="py-2">
           <AlertCircle className="h-4 w-4" />
-          {error}
-        </div>
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
       )}
 
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={handleDecryptAndDownload}
         disabled={isDecrypting || !passphrase}
-        className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full sm:w-auto"
       >
         {isDecrypting ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Decrypting... {decryptionProgress}%
           </>
         ) : (
           <>
-            <Download className="h-4 w-4" />
+            <Download className="mr-2 h-4 w-4" />
             {decryptedFilename ? `Download ${decryptedFilename}` : "Decrypt & Download"}
           </>
         )}
-      </button>
+      </Button>
     </div>
   );
 }

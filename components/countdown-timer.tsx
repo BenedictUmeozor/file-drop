@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CountdownTimerProps {
   expiresAt: string;
+  className?: string;
 }
 
-export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
+export function CountdownTimer({ expiresAt, className }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
+  const [isLowTime, setIsLowTime] = useState(false);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -21,6 +24,13 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
         setIsExpired(true);
         setTimeLeft("Expired");
         return;
+      }
+
+      // Less than 5 minutes
+      if (diff < 5 * 60 * 1000) {
+        setIsLowTime(true);
+      } else {
+        setIsLowTime(false);
       }
 
       const minutes = Math.floor(diff / 60000);
@@ -36,15 +46,15 @@ export function CountdownTimer({ expiresAt }: CountdownTimerProps) {
   }, [expiresAt]);
 
   return (
-    <div
-      className={`flex items-center gap-2 rounded-lg border px-2 py-1 text-sm font-medium ${
-        isExpired
-          ? "border-red-300 bg-red-100 text-red-500 dark:border-red-800 dark:bg-red-900/20"
-          : "border-red-200 bg-red-50 text-red-600 dark:border-red-800/50 dark:bg-red-900/10 dark:text-red-400"
-      }`}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 text-sm font-medium tabular-nums text-muted-foreground",
+        (isExpired || isLowTime) && "text-destructive",
+        className
+      )}
     >
-      <Clock className="h-4 w-4" />
-      <span>{timeLeft || "Calculating..."}</span>
-    </div>
+      <Clock className="h-3.5 w-3.5" />
+      <span>{timeLeft || "--"}</span>
+    </span>
   );
 }
