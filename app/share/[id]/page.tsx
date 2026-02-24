@@ -1,29 +1,26 @@
+import { BackgroundDecorations } from "@/components/background-decorations";
 import { CopyButton } from "@/components/copy-button";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { QRCode } from "@/components/qr-code";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  CloudUpload,
   FileIcon,
   Files,
   Lock,
-  Share2,
-  AlertCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -97,136 +94,154 @@ export default async function SharePage({ params }: PageProps) {
 
   if (!metadata) {
     return (
-      <div className="flex min-h-screen flex-col bg-background font-sans antialiased">
-        <Header />
-        <main className="flex flex-1 flex-col items-center justify-center p-4">
-          <Card className="w-full max-w-md text-center">
-            <CardHeader>
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-                <AlertCircle className="h-6 w-6" />
+      <>
+        <BackgroundDecorations />
+        <div className="flex min-h-screen flex-col">
+          <Header />
+          <main className="flex flex-1 flex-col items-center justify-center p-4">
+            <div className="animate-fade-in-up w-full max-w-md text-center">
+              <div className="bg-destructive/10 ring-destructive/20 mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ring-1">
+                <AlertCircle className="text-destructive h-7 w-7" />
               </div>
-              <CardTitle>Files Not Found</CardTitle>
-              <CardDescription>
+
+              <h1 className="text-2xl font-bold tracking-tight">
+                Files Not Found
+              </h1>
+              <p className="text-muted-foreground mt-2">
                 This bundle may have expired or been deleted.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="justify-center">
-              <Button asChild>
-                <Link href="/">Back to Home</Link>
+              </p>
+
+              <Button asChild className="mt-8" size="lg">
+                <Link href="/">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Home
+                </Link>
               </Button>
-            </CardFooter>
-          </Card>
-        </main>
-        <Footer />
-      </div>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background font-sans antialiased">
-      <Header />
+    <>
+      <BackgroundDecorations />
+      <div className="flex min-h-screen flex-col">
+        <Header />
 
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-2xl">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Share2 className="h-6 w-6" />
-            </div>
-            <CardTitle className="text-2xl">
-              {metadata.fileCount > 1
-                ? "Files Ready to Share"
-                : "File Ready to Share"}
-            </CardTitle>
-            <CardDescription className="flex items-center justify-center gap-2">
-              Share the link below or scan the QR code to download.
-              {metadata.isPasswordProtected && (
-                <Badge variant="outline" className="gap-1 font-normal">
-                  <Lock className="h-3 w-3" />
-                  Protected
-                </Badge>
-              )}
-            </CardDescription>
-          </CardHeader>
+        <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+          <div className="w-full max-w-2xl space-y-6">
+            <div className="animate-fade-in flex flex-col items-center text-center">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 shadow-lg ring-1 shadow-emerald-500/5 ring-emerald-500/20">
+                <CheckCircle2 className="h-7 w-7 text-emerald-500 dark:text-emerald-400" />
+              </div>
 
-          <CardContent className="space-y-8">
-            {/* File List */}
-            <div className="rounded-lg border bg-muted/40 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Files className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {metadata.fileCount} {metadata.fileCount > 1 ? "files" : "file"}
-                  </span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">
-                    {formatFileSize(metadata.totalSize)}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="max-h-48 overflow-y-auto pr-2">
-                {metadata.files.map((file, index) => (
-                  <div key={file.fileId}>
-                    {index > 0 && <Separator className="my-2" />}
-                    <div className="flex items-center justify-between py-1 text-sm">
-                      <div className="flex items-center gap-2 truncate">
-                        <FileIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="truncate">{file.filename}</span>
-                      </div>
-                      <span className="shrink-0 text-xs text-muted-foreground ml-4">
-                        {formatFileSize(file.size)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {metadata.fileCount > 1
+                  ? "Files Ready to Share"
+                  : "File Ready to Share"}
+              </h1>
+
+              <p className="text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-2 text-sm">
+                Share the link or scan the QR code to download
+                {metadata.isPasswordProtected && (
+                  <Badge
+                    variant="outline"
+                    className="border-primary/20 bg-primary/5 text-primary gap-1 font-normal"
+                  >
+                    <ShieldCheck className="h-3 w-3" />
+                    E2E Encrypted
+                  </Badge>
+                )}
+              </p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2">
-               {/* Share Link */}
-              <div className="space-y-4">
+            <Card className="animate-fade-in-up border-border/60 bg-card/80 backdrop-blur-sm [animation-delay:100ms]">
+              <CardContent className="space-y-6 p-6">
                 <div className="space-y-2">
-                   <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Share Link</div>
-                   <div className="flex items-center gap-2">
-                    <Input 
-                      value={shareUrl} 
-                      readOnly 
-                      className="font-mono text-xs" 
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Share Link</span>
+                    <CountdownTimer
+                      expiresAt={new Date(metadata.expiresAt).toISOString()}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={shareUrl}
+                      readOnly
+                      className="font-mono text-xs"
                     />
                     <CopyButton text={shareUrl} />
-                   </div>
+                  </div>
+                  {metadata.isPasswordProtected && (
+                    <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                      <Lock className="h-3 w-3" />
+                      Password required for download
+                    </p>
+                  )}
                 </div>
-                
-                 <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                       <span>Expires in:</span>
-                       <CountdownTimer expiresAt={new Date(metadata.expiresAt).toISOString()} />
-                    </div>
-                    {metadata.isPasswordProtected && (
-                         <div className="flex items-center gap-2">
-                           <Lock className="h-3 w-3" />
-                           <span>Password required for download</span>
-                         </div>
-                    )}
-                 </div>
-              </div>
 
-               {/* QR Code */}
-              <div className="flex flex-col items-center justify-start gap-2">
-                <QRCode url={shareUrl} size={140} className="border-2" />
-                <span className="text-xs text-muted-foreground">Scan to download</span>
-              </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter className="flex justify-center border-t bg-muted/20 p-6">
-             <Button variant="ghost" asChild>
-                <Link href="/">Upload more files</Link>
-             </Button>
-          </CardFooter>
-        </Card>
-      </main>
-      <Footer />
-    </div>
+                <Separator />
+
+                <div className="grid gap-6 sm:grid-cols-[1fr_auto]">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Files className="text-muted-foreground h-4 w-4" />
+                      <span>
+                        {metadata.fileCount}{" "}
+                        {metadata.fileCount > 1 ? "files" : "file"}
+                      </span>
+                      <span className="text-muted-foreground/50">·</span>
+                      <span className="text-muted-foreground">
+                        {formatFileSize(metadata.totalSize)}
+                      </span>
+                    </div>
+
+                    <div className="custom-scrollbar max-h-48 space-y-1 overflow-y-auto pr-1">
+                      {metadata.files.map((file) => (
+                        <div
+                          key={file.fileId}
+                          className="group hover:bg-muted/50 flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors"
+                        >
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <div className="bg-muted/60 ring-border/60 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ring-1">
+                              <FileIcon className="text-muted-foreground h-4 w-4" />
+                            </div>
+                            <span className="truncate">{file.filename}</span>
+                          </div>
+                          <span className="text-muted-foreground ml-4 shrink-0 text-xs">
+                            {formatFileSize(file.size)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2 sm:border-l sm:pl-6">
+                    <QRCode url={shareUrl} size={130} />
+                    <span className="text-muted-foreground text-[11px]">
+                      Scan to download
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter className="bg-muted/20 border-t px-6 py-4">
+                <Button variant="ghost" asChild className="w-full">
+                  <Link href="/">
+                    <CloudUpload className="mr-2 h-4 w-4" />
+                    Upload more files
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    </>
   );
 }
