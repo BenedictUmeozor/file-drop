@@ -144,7 +144,7 @@ export default async function SharePage({ params }: PageProps) {
                   : "File Ready to Share"}
               </h1>
 
-              <p className="text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-2 text-sm">
+              <div className="text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-2 text-sm">
                 Share the link or scan the QR code to download
                 {metadata.isPasswordProtected && (
                   <Badge
@@ -155,7 +155,7 @@ export default async function SharePage({ params }: PageProps) {
                     E2E Encrypted
                   </Badge>
                 )}
-              </p>
+              </div>
             </div>
 
             <Card className="animate-fade-in-up border-border/60 bg-card/80 backdrop-blur-sm [animation-delay:100ms]">
