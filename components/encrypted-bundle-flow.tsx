@@ -25,6 +25,8 @@ interface EncryptedBundleFlowProps {
   encryptionSaltB64: string;
   encryptionIterations: number;
   encryptionChunkSize: number;
+  /** Whether the server has already validated the unlock cookie (revisit). */
+  serverUnlocked: boolean;
 }
 
 /**
@@ -52,28 +54,44 @@ export function EncryptedBundleFlow({
   encryptionSaltB64,
   encryptionIterations,
   encryptionChunkSize,
+  serverUnlocked,
 }: EncryptedBundleFlowProps) {
   const [capturedPassphrase, setCapturedPassphrase] = useState<string | null>(null);
 
-  if (capturedPassphrase === null) {
+  // Stage 2a: unlock flow just completed — pass captured passphrase to skip decryption gate
+  if (capturedPassphrase !== null) {
     return (
-      <BundleUnlockForm
-        bundleId={bundleId}
-        isEncrypted
-        unlockSaltB64={unlockSaltB64}
+      <EncryptedBundleDownloader
+        files={files}
+        encryptionSaltB64={encryptionSaltB64}
         encryptionIterations={encryptionIterations}
-        onUnlocked={setCapturedPassphrase}
+        encryptionChunkSize={encryptionChunkSize}
+        initialPassphrase={capturedPassphrase}
       />
     );
   }
 
+  // Stage 2b: revisit with valid unlock cookie — go straight to downloader
+  // (user still needs to enter passphrase for client-side decryption)
+  if (serverUnlocked) {
+    return (
+      <EncryptedBundleDownloader
+        files={files}
+        encryptionSaltB64={encryptionSaltB64}
+        encryptionIterations={encryptionIterations}
+        encryptionChunkSize={encryptionChunkSize}
+      />
+    );
+  }
+
+  // Stage 1: not yet unlocked — show server unlock + passphrase capture
   return (
-    <EncryptedBundleDownloader
-      files={files}
-      encryptionSaltB64={encryptionSaltB64}
+    <BundleUnlockForm
+      bundleId={bundleId}
+      isEncrypted
+      unlockSaltB64={unlockSaltB64}
       encryptionIterations={encryptionIterations}
-      encryptionChunkSize={encryptionChunkSize}
-      initialPassphrase={capturedPassphrase}
+      onUnlocked={setCapturedPassphrase}
     />
   );
 }

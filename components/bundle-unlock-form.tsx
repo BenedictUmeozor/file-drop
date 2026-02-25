@@ -98,9 +98,10 @@ export function BundleUnlockForm({
       });
 
       if (response.status === 204) {
-        // Success - hand off passphrase to parent or trigger refresh
+        // Success - hand off passphrase to parent AND refresh server chrome
         if (onUnlocked) {
           onUnlocked(passphrase);
+          router.refresh(); // Sync header/badges without losing captured passphrase state
         } else {
           setPassphrase("");
           router.refresh();

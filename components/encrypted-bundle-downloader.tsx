@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, Shield, File, Lock } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Eye, EyeOff, Shield, File, Lock, Loader2, AlertCircle } from "lucide-react";
 import { EncryptedFileDownloadButton } from "./encrypted-file-download-button";
-import type { KeyDerivationParams } from "@/lib/crypto";
+import { deriveKeysFromParams, decryptMetadata, type KeyDerivationParams } from "@/lib/crypto";
 import {
   Card,
   CardHeader,
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FileMetadata {
   fileId: string;
@@ -58,17 +58,54 @@ export function EncryptedBundleDownloader({
   const [passphrase, setPassphrase] = useState(initialPassphrase ?? "");
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(!!initialPassphrase);
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const derivationParams: KeyDerivationParams = {
-    saltB64: encryptionSaltB64,
-    iterations: encryptionIterations,
-    hash: "SHA-256",
-  };
+  const derivationParams = useMemo<KeyDerivationParams>(
+    () => ({ saltB64: encryptionSaltB64, iterations: encryptionIterations, hash: "SHA-256" }),
+    [encryptionSaltB64, encryptionIterations],
+  );
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passphrase.length >= 8) {
+    if (passphrase.length < 8) return;
+
+    // Fix 2: capture before any awaits so input changes during async work don't matter
+    const capturedPassphrase = passphrase;
+    setIsValidating(true);
+    setValidationError(null);
+
+    try {
+      const testFile = files.find(
+        (f) => f.isEncrypted && f.encryptedMetadataB64 && f.encryptedMetadataIvB64
+      );
+      // Fix 1: block unlock when no verifiable sample exists
+      if (!testFile?.encryptedMetadataB64 || !testFile?.encryptedMetadataIvB64) {
+        setValidationError("Unable to verify passphrase for this bundle.");
+        return;
+      }
+      const keys = await deriveKeysFromParams(capturedPassphrase, derivationParams);
+      await decryptMetadata(
+        testFile.encryptedMetadataB64,
+        testFile.encryptedMetadataIvB64,
+        keys.metadataKey
+      );
+      // Fix 2: sync state to the passphrase we actually verified
+      setPassphrase(capturedPassphrase);
       setIsUnlocked(true);
+    } catch (err) {
+      // Surface capability/config failures separately from wrong passphrase.
+      // Use optional chaining on `name` to handle non-Error objects (e.g. DOMException).
+      const errName = (err as { name?: unknown }).name;
+      if (errName === "NotSupportedError" || errName === "InvalidAccessError") {
+        setValidationError(
+          "Could not verify passphrase (crypto unavailable). Please try a different browser."
+        );
+      } else {
+        setValidationError("Incorrect passphrase. Please try again.");
+      }
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -103,11 +140,13 @@ export function EncryptedBundleDownloader({
                   className="pr-10"
                   autoComplete="off"
                   required
+                  disabled={isValidating}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassphrase(!showPassphrase)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isValidating}
                 >
                   {showPassphrase ? (
                     <EyeOff className="h-4 w-4" />
@@ -126,16 +165,32 @@ export function EncryptedBundleDownloader({
                 keys.
               </p>
             </div>
+
+            {validationError && (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">{validationError}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
 
           <CardFooter>
             <Button
               type="submit"
-              disabled={passphrase.length < 8}
+              disabled={passphrase.length < 8 || isValidating}
               className="w-full"
             >
-              <Lock className="mr-2 h-4 w-4" />
-              Unlock Files
+              {isValidating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Lock className="mr-2 h-4 w-4" />
+                  Unlock Files
+                </>
+              )}
             </Button>
           </CardFooter>
         </form>

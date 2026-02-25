@@ -83,6 +83,9 @@ export function EncryptedFileDownloadButton({
       // 2. Fetch encrypted file
       const response = await fetch(`/api/download/${fileId}`);
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Unlock expired; please unlock again.");
+        }
         throw new Error("Failed to download encrypted file");
       }
       const encryptedBytes = new Uint8Array(await response.arrayBuffer());

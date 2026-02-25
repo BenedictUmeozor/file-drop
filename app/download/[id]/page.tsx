@@ -167,13 +167,14 @@ export default async function DownloadPage({ params }: PageProps) {
             </div>
 
             <div className="animate-fade-in-up [animation-delay:100ms]">
-              {metadata.isPasswordProtected && !metadata.isUnlocked ? (
-                metadata.isEncrypted &&
-                metadata.encryptionSaltB64 &&
-                metadata.encryptionIterations &&
-                metadata.encryptionChunkSize ? (
-                  // Encrypted + locked: single passphrase entry satisfies both
-                  // server unlock and client decryption via EncryptedBundleFlow
+              {metadata.isEncrypted &&
+              metadata.encryptionSaltB64 &&
+              metadata.encryptionIterations &&
+              metadata.encryptionChunkSize ? (
+                metadata.isPasswordProtected ? (
+                  // Encrypted + password-protected: single-entry flow, both locked and
+                  // revisit (serverUnlocked=true). router.refresh() in the unlock handler
+                  // updates the server chrome while capturedPassphrase state persists.
                   <EncryptedBundleFlow
                     bundleId={id}
                     files={metadata.files}
@@ -181,23 +182,22 @@ export default async function DownloadPage({ params }: PageProps) {
                     encryptionSaltB64={metadata.encryptionSaltB64}
                     encryptionIterations={metadata.encryptionIterations}
                     encryptionChunkSize={metadata.encryptionChunkSize}
+                    serverUnlocked={metadata.isUnlocked}
                   />
                 ) : (
-                  // Non-encrypted + locked: plain server-side unlock
-                  <BundleUnlockForm
-                    bundleId={id}
-                    isEncrypted={false}
+                  // Encrypted but not password-protected: go straight to downloader
+                  <EncryptedBundleDownloader
+                    files={metadata.files}
+                    encryptionSaltB64={metadata.encryptionSaltB64}
+                    encryptionIterations={metadata.encryptionIterations}
+                    encryptionChunkSize={metadata.encryptionChunkSize}
                   />
                 )
-              ) : metadata.isEncrypted &&
-                metadata.encryptionSaltB64 &&
-                metadata.encryptionIterations &&
-                metadata.encryptionChunkSize ? (
-                <EncryptedBundleDownloader
-                  files={metadata.files}
-                  encryptionSaltB64={metadata.encryptionSaltB64}
-                  encryptionIterations={metadata.encryptionIterations}
-                  encryptionChunkSize={metadata.encryptionChunkSize}
+              ) : metadata.isPasswordProtected && !metadata.isUnlocked ? (
+                // Non-encrypted + locked: plain server-side unlock
+                <BundleUnlockForm
+                  bundleId={id}
+                  isEncrypted={false}
                 />
               ) : (
                 <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
