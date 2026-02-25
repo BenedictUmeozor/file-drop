@@ -21,15 +21,6 @@ export function Footer({ variant = "minimal", className }: FooterProps) {
             >
               Benedict
             </a>
-            . The source code is available on{" "}
-            <a
-              href="https://github.com/benedictumeozor/file-drop"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4"
-            >
-              GitHub
-            </a>
             .
           </p>
           <div className="text-muted-foreground flex gap-4 text-sm">
