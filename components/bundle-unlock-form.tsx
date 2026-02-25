@@ -26,7 +26,7 @@ interface BundleUnlockFormProps {
   isEncrypted?: boolean;
   unlockSaltB64?: string;
   encryptionIterations?: number;
-  onUnlocked?: () => void;
+  onUnlocked?: (passphrase: string) => void;
 }
 
 export function BundleUnlockForm({
@@ -98,11 +98,11 @@ export function BundleUnlockForm({
       });
 
       if (response.status === 204) {
-        // Success - clear passphrase and trigger refresh
-        setPassphrase("");
+        // Success - hand off passphrase to parent or trigger refresh
         if (onUnlocked) {
-          onUnlocked();
+          onUnlocked(passphrase);
         } else {
+          setPassphrase("");
           router.refresh();
         }
         return;

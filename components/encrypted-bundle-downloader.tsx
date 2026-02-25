@@ -37,6 +37,7 @@ interface EncryptedBundleDownloaderProps {
   encryptionSaltB64: string;
   encryptionIterations: number;
   encryptionChunkSize: number;
+  initialPassphrase?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -52,10 +53,11 @@ export function EncryptedBundleDownloader({
   encryptionSaltB64,
   encryptionIterations,
   encryptionChunkSize,
+  initialPassphrase,
 }: EncryptedBundleDownloaderProps) {
-  const [passphrase, setPassphrase] = useState("");
+  const [passphrase, setPassphrase] = useState(initialPassphrase ?? "");
   const [showPassphrase, setShowPassphrase] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(!!initialPassphrase);
 
   const derivationParams: KeyDerivationParams = {
     saltB64: encryptionSaltB64,

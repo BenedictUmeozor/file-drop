@@ -2,6 +2,7 @@ import { BackgroundDecorations } from "@/components/background-decorations";
 import { BundleUnlockForm } from "@/components/bundle-unlock-form";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { EncryptedBundleDownloader } from "@/components/encrypted-bundle-downloader";
+import { EncryptedBundleFlow } from "@/components/encrypted-bundle-flow";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Badge } from "@/components/ui/badge";
@@ -167,12 +168,27 @@ export default async function DownloadPage({ params }: PageProps) {
 
             <div className="animate-fade-in-up [animation-delay:100ms]">
               {metadata.isPasswordProtected && !metadata.isUnlocked ? (
-                <BundleUnlockForm
-                  bundleId={id}
-                  isEncrypted={metadata.isEncrypted}
-                  unlockSaltB64={metadata.unlockSaltB64}
-                  encryptionIterations={metadata.encryptionIterations}
-                />
+                metadata.isEncrypted &&
+                metadata.encryptionSaltB64 &&
+                metadata.encryptionIterations &&
+                metadata.encryptionChunkSize ? (
+                  // Encrypted + locked: single passphrase entry satisfies both
+                  // server unlock and client decryption via EncryptedBundleFlow
+                  <EncryptedBundleFlow
+                    bundleId={id}
+                    files={metadata.files}
+                    unlockSaltB64={metadata.unlockSaltB64}
+                    encryptionSaltB64={metadata.encryptionSaltB64}
+                    encryptionIterations={metadata.encryptionIterations}
+                    encryptionChunkSize={metadata.encryptionChunkSize}
+                  />
+                ) : (
+                  // Non-encrypted + locked: plain server-side unlock
+                  <BundleUnlockForm
+                    bundleId={id}
+                    isEncrypted={false}
+                  />
+                )
               ) : metadata.isEncrypted &&
                 metadata.encryptionSaltB64 &&
                 metadata.encryptionIterations &&
