@@ -38,6 +38,7 @@ interface EncryptedBundleDownloaderProps {
   encryptionIterations: number;
   encryptionChunkSize: number;
   initialPassphrase?: string;
+  isExpired?: boolean;
 }
 
 function formatFileSize(bytes: number): string {
@@ -54,6 +55,7 @@ export function EncryptedBundleDownloader({
   encryptionIterations,
   encryptionChunkSize,
   initialPassphrase,
+  isExpired,
 }: EncryptedBundleDownloaderProps) {
   const [passphrase, setPassphrase] = useState(initialPassphrase ?? "");
   const [showPassphrase, setShowPassphrase] = useState(false);
@@ -172,12 +174,21 @@ export function EncryptedBundleDownloader({
                 <AlertDescription className="text-xs">{validationError}</AlertDescription>
               </Alert>
             )}
+
+            {isExpired && (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  This bundle has expired and can no longer be unlocked or downloaded.
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
 
           <CardFooter>
             <Button
               type="submit"
-              disabled={passphrase.length < 8 || isValidating}
+              disabled={passphrase.length < 8 || isValidating || !!isExpired}
               className="w-full"
             >
               {isValidating ? (
@@ -206,6 +217,15 @@ export function EncryptedBundleDownloader({
           <span className="font-medium">Decryption unlocked</span>
         </div>
       </div>
+
+      {isExpired && (
+        <Alert variant="destructive" className="py-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            This bundle has expired. Downloads are no longer available.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card className="w-full">
         <CardContent className="p-0">
@@ -244,6 +264,7 @@ export function EncryptedBundleDownloader({
                         chunkSize={encryptionChunkSize}
                         passphrase={passphrase}
                         derivationParams={derivationParams}
+                        isExpired={isExpired}
                       />
                     )}
                 </div>

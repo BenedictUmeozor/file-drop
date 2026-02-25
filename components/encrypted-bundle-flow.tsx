@@ -27,6 +27,7 @@ interface EncryptedBundleFlowProps {
   encryptionChunkSize: number;
   /** Whether the server has already validated the unlock cookie (revisit). */
   serverUnlocked: boolean;
+  isExpired?: boolean;
 }
 
 /**
@@ -55,6 +56,7 @@ export function EncryptedBundleFlow({
   encryptionIterations,
   encryptionChunkSize,
   serverUnlocked,
+  isExpired,
 }: EncryptedBundleFlowProps) {
   const [capturedPassphrase, setCapturedPassphrase] = useState<string | null>(null);
 
@@ -67,6 +69,7 @@ export function EncryptedBundleFlow({
         encryptionIterations={encryptionIterations}
         encryptionChunkSize={encryptionChunkSize}
         initialPassphrase={capturedPassphrase}
+        isExpired={isExpired}
       />
     );
   }
@@ -80,6 +83,7 @@ export function EncryptedBundleFlow({
         encryptionSaltB64={encryptionSaltB64}
         encryptionIterations={encryptionIterations}
         encryptionChunkSize={encryptionChunkSize}
+        isExpired={isExpired}
       />
     );
   }

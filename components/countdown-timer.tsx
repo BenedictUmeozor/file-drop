@@ -1,18 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CountdownTimerProps {
   expiresAt: string;
   className?: string;
+  onExpire?: () => void;
 }
 
-export function CountdownTimer({ expiresAt, className }: CountdownTimerProps) {
+export function CountdownTimer({ expiresAt, className, onExpire }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
   const [isLowTime, setIsLowTime] = useState(false);
+  const onExpireRef = useRef(onExpire);
+  const hasCalledExpireRef = useRef(false);
+
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -23,6 +30,10 @@ export function CountdownTimer({ expiresAt, className }: CountdownTimerProps) {
       if (diff <= 0) {
         setIsExpired(true);
         setTimeLeft("Expired");
+        if (!hasCalledExpireRef.current) {
+          hasCalledExpireRef.current = true;
+          onExpireRef.current?.();
+        }
         return;
       }
 

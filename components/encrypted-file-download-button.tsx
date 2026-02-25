@@ -23,6 +23,7 @@ interface EncryptedFileDownloadButtonProps {
   chunkSize: number;
   passphrase: string;
   derivationParams: KeyDerivationParams;
+  isExpired?: boolean;
 }
 
 export function EncryptedFileDownloadButton({
@@ -36,6 +37,7 @@ export function EncryptedFileDownloadButton({
   chunkSize,
   passphrase,
   derivationParams,
+  isExpired,
 }: EncryptedFileDownloadButtonProps) {
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [decryptionProgress, setDecryptionProgress] = useState(0);
@@ -148,10 +150,15 @@ export function EncryptedFileDownloadButton({
         variant="outline"
         size="sm"
         onClick={handleDecryptAndDownload}
-        disabled={isDecrypting || !passphrase}
+        disabled={isDecrypting || !passphrase || !!isExpired}
         className="w-full sm:w-auto"
       >
-        {isDecrypting ? (
+        {isExpired ? (
+          <>
+            <Download className="mr-2 h-4 w-4" />
+            Expired
+          </>
+        ) : isDecrypting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Decrypting... {decryptionProgress}%
