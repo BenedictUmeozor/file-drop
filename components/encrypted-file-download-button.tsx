@@ -151,22 +151,26 @@ export function EncryptedFileDownloadButton({
         size="sm"
         onClick={handleDecryptAndDownload}
         disabled={isDecrypting || !passphrase || !!isExpired}
-        className="w-full sm:w-auto"
+        className="w-full sm:w-auto sm:max-w-[300px] overflow-hidden"
+        title={decryptedFilename ? `Download ${decryptedFilename}` : "Decrypt & Download"}
+        aria-label={decryptedFilename ? `Download ${decryptedFilename}` : "Decrypt & Download"}
       >
         {isExpired ? (
           <>
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="mr-2 h-4 w-4 shrink-0" />
             Expired
           </>
         ) : isDecrypting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Decrypting... {decryptionProgress}%
+            <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
+            <span className="truncate min-w-0">Decrypting... {decryptionProgress}%</span>
           </>
         ) : (
           <>
-            <Download className="mr-2 h-4 w-4" />
-            {decryptedFilename ? `Download ${decryptedFilename}` : "Decrypt & Download"}
+            <Download className="mr-2 h-4 w-4 shrink-0" />
+            <span className="truncate min-w-0">
+              {decryptedFilename ? `Download ${decryptedFilename}` : "Decrypt & Download"}
+            </span>
           </>
         )}
       </Button>
