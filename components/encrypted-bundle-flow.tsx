@@ -64,6 +64,7 @@ export function EncryptedBundleFlow({
   if (capturedPassphrase !== null) {
     return (
       <EncryptedBundleDownloader
+        bundleId={bundleId}
         files={files}
         encryptionSaltB64={encryptionSaltB64}
         encryptionIterations={encryptionIterations}
@@ -79,6 +80,7 @@ export function EncryptedBundleFlow({
   if (serverUnlocked) {
     return (
       <EncryptedBundleDownloader
+        bundleId={bundleId}
         files={files}
         encryptionSaltB64={encryptionSaltB64}
         encryptionIterations={encryptionIterations}

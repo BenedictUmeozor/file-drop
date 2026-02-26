@@ -145,6 +145,7 @@ export function DownloadPageContent({ metadata, bundleId }: DownloadPageContentP
             />
           ) : (
             <EncryptedBundleDownloader
+              bundleId={bundleId}
               files={metadata.files}
               encryptionSaltB64={metadata.encryptionSaltB64}
               encryptionIterations={metadata.encryptionIterations}

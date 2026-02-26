@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Eye, EyeOff, Shield, File, Lock, Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle, Download, Eye, EyeOff, File, Loader2, Lock, Shield } from "lucide-react";
 import { EncryptedFileDownloadButton } from "./encrypted-file-download-button";
-import { deriveKeysFromParams, decryptMetadata, type KeyDerivationParams } from "@/lib/crypto";
+import { decryptFile, decryptMetadata, deriveKeysFromParams, type KeyDerivationParams } from "@/lib/crypto";
 import {
   Card,
   CardHeader,
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 
 interface FileMetadata {
   fileId: string;
@@ -33,6 +34,7 @@ interface FileMetadata {
 }
 
 interface EncryptedBundleDownloaderProps {
+  bundleId: string;
   files: FileMetadata[];
   encryptionSaltB64: string;
   encryptionIterations: number;
@@ -49,7 +51,36 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
+function sanitizeZipEntryName(filename: string): string {
+  return (
+    filename
+      .replace(/\.\./g, "")
+      .replace(/[\/\\]/g, "_")
+      .trim() || "file"
+  );
+}
+
+function makeUniqueFilename(name: string, used: Set<string>): string {
+  if (!used.has(name)) {
+    used.add(name);
+    return name;
+  }
+  const lastDot = name.lastIndexOf(".");
+  const base = lastDot >= 0 ? name.slice(0, lastDot) : name;
+  const ext = lastDot >= 0 ? name.slice(lastDot) : "";
+  let counter = 1;
+  for (;;) {
+    const candidate = `${base} (${counter})${ext}`;
+    if (!used.has(candidate)) {
+      used.add(candidate);
+      return candidate;
+    }
+    counter++;
+  }
+}
+
 export function EncryptedBundleDownloader({
+  bundleId,
   files,
   encryptionSaltB64,
   encryptionIterations,
@@ -67,6 +98,125 @@ export function EncryptedBundleDownloader({
     () => ({ saltB64: encryptionSaltB64, iterations: encryptionIterations, hash: "SHA-256" }),
     [encryptionSaltB64, encryptionIterations],
   );
+
+  const hasEncryptedFiles = useMemo(
+    () =>
+      files.some(
+        (f) =>
+          f.isEncrypted &&
+          f.wrappedDekB64 &&
+          f.wrappedDekIvB64 &&
+          f.encryptedMetadataB64 &&
+          f.encryptedMetadataIvB64 &&
+          f.baseNonceB64 &&
+          f.originalSize != null,
+      ),
+    [files],
+  );
+
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const [downloadAllProgress, setDownloadAllProgress] = useState(0);
+  const [downloadAllStatus, setDownloadAllStatus] = useState<string | null>(null);
+  const [downloadAllError, setDownloadAllError] = useState<string | null>(null);
+
+  const handleDownloadAll = async () => {
+    if (isDownloadingAll || isExpired) return;
+    setIsDownloadingAll(true);
+    setDownloadAllProgress(0);
+    setDownloadAllStatus("Preparing download\u2026");
+    setDownloadAllError(null);
+
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      const usedNames = new Set<string>();
+
+      const keys = await deriveKeysFromParams(passphrase, derivationParams);
+
+      const encryptedFiles = files.filter(
+        (f) =>
+          f.isEncrypted &&
+          f.wrappedDekB64 &&
+          f.wrappedDekIvB64 &&
+          f.encryptedMetadataB64 &&
+          f.encryptedMetadataIvB64 &&
+          f.baseNonceB64 &&
+          f.originalSize != null,
+      );
+
+      for (let i = 0; i < encryptedFiles.length; i++) {
+        const file = encryptedFiles[i];
+        const fileNum = i + 1;
+
+        setDownloadAllStatus(
+          `Downloading file ${fileNum}/${encryptedFiles.length}: ${file.filename}`,
+        );
+
+        const response = await fetch(`/api/download/${file.fileId}`);
+        if (!response.ok) {
+          if (response.status === 401)
+            throw new Error("Unlock expired. Please reload and unlock again.");
+          if (response.status === 410)
+            throw new Error("Bundle has expired.");
+          throw new Error(`Failed to fetch file: ${file.filename}`);
+        }
+        const encryptedBytes = new Uint8Array(await response.arrayBuffer());
+
+        const metadata = await decryptMetadata(
+          file.encryptedMetadataB64!,
+          file.encryptedMetadataIvB64!,
+          keys.metadataKey,
+        );
+
+        setDownloadAllStatus(
+          `Decrypting file ${fileNum}/${encryptedFiles.length}: ${metadata.filename}`,
+        );
+
+        const decryptedBytes = await decryptFile(
+          encryptedBytes,
+          file.wrappedDekB64!,
+          file.wrappedDekIvB64!,
+          file.baseNonceB64!,
+          encryptionChunkSize,
+          file.originalSize!,
+          keys.kekWrapKey,
+          (progress) => {
+            const overall = ((i + progress) / encryptedFiles.length) * 100;
+            setDownloadAllProgress(Math.round(overall));
+          },
+        );
+
+        const safeName = makeUniqueFilename(
+          sanitizeZipEntryName(metadata.filename),
+          usedNames,
+        );
+        zip.file(safeName, decryptedBytes);
+      }
+
+      setDownloadAllStatus("Creating ZIP archive\u2026");
+      setDownloadAllProgress(99);
+
+      const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `filedrop-${bundleId}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setDownloadAllProgress(100);
+      setDownloadAllStatus("Download complete!");
+    } catch (err) {
+      console.error("Download all error:", err);
+      setDownloadAllError(
+        err instanceof Error ? err.message : "Download failed. Please try again.",
+      );
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,6 +423,59 @@ export function EncryptedBundleDownloader({
             ))}
           </div>
         </CardContent>
+
+          <CardFooter className="bg-muted/20 flex-col items-stretch gap-3 border-t p-4">
+            {downloadAllError && (
+              <Alert variant="destructive" className="w-full py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">{downloadAllError}</AlertDescription>
+              </Alert>
+            )}
+
+            {isDownloadingAll && (
+              <div className="w-full space-y-2">
+                <Progress value={downloadAllProgress} className="h-2" />
+                {downloadAllStatus && (
+                  <p className="truncate text-center text-xs text-muted-foreground">
+                    {downloadAllStatus}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {hasEncryptedFiles ? (
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={handleDownloadAll}
+                disabled={!!isExpired || isDownloadingAll}
+              >
+                {isDownloadingAll ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Downloading&hellip;
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-5 w-5" />
+                    Download {files.length > 1 ? "All Files" : "File"}
+                  </>
+                )}
+              </Button>
+            ) : isExpired ? (
+              <Button size="lg" className="w-full" disabled>
+                <Download className="mr-2 h-5 w-5" />
+                Download {files.length > 1 ? "All Files" : "File"}
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="w-full">
+                <a href={`/api/bundle/${bundleId}/download`}>
+                  <Download className="mr-2 h-5 w-5" />
+                  Download {files.length > 1 ? "All Files" : "File"}
+                </a>
+              </Button>
+            )}
+          </CardFooter>
       </Card>
     </div>
   );
