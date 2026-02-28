@@ -723,7 +723,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
             </div>
             
             <div className="text-center space-y-2">
-              <h2 className="text-xl font-bold tracking-tight text-destructive">Upload Failed</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-destructive">Upload Failed</h2>
               <Alert variant="destructive" className="mx-auto max-w-sm border-0 bg-transparent p-0 text-center">
                  <AlertDescription className="font-medium">
                    {errorMessage}
@@ -748,8 +748,8 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
         // Idle state
         return (
           <div className="flex flex-col items-center justify-center space-y-5 py-16 text-center">
-            <div className="rounded-full border bg-muted/50 p-5">
-              <CloudUpload className="h-10 w-10 text-muted-foreground" />
+            <div className="rounded-full border bg-muted/50 p-4">
+              <CloudUpload className="h-8 w-8 text-muted-foreground" />
             </div>
             <div className="space-y-2">
               <h2 className="text-xl font-semibold tracking-tight">
@@ -780,7 +780,7 @@ export function UploadZone({ onExpiryChange }: UploadZoneProps) {
     <Card
       {...getRootProps({
         className: cn(
-           "relative flex min-h-[220px] w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+           "relative flex min-h-[220px] w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
            uploadState === "idle" && "border-border/60 bg-card/50 hover:border-primary/50 hover:bg-primary/[0.02]",
            uploadState === "dragging" && "border-primary/50 bg-primary/[0.02]",
            uploadState === "success" && "cursor-default border-primary/40 bg-primary/[0.03]",

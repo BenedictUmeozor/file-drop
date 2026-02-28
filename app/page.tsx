@@ -80,7 +80,7 @@ export default function Home() {
                 </Button>
               </div>
 
-              <ul className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+              <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 {trustIndicators.map((item) => (
                   <li key={item.label} className="flex items-center gap-2">
                     <item.icon className="h-4 w-4" aria-hidden="true" />
@@ -90,7 +90,7 @@ export default function Home() {
               </ul>
             </div>
 
-            <div id="upload" className="scroll-mt-16 rounded-xl border bg-card p-3 sm:p-4">
+            <div id="upload" className="scroll-mt-16 rounded-xl border bg-card p-3 shadow-sm sm:p-4">
               <UploadZone />
             </div>
           </div>
