@@ -1,12 +1,9 @@
-"use client";
-
-import { BackgroundDecorations } from "@/components/background-decorations";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { UploadZone } from "@/components/upload-zone";
-import { Clock, Lock, QrCode, Shield, Sparkles, Zap } from "lucide-react";
+import { Clock, Lock, QrCode, Shield, Zap } from "lucide-react";
 import Link from "next/link";
 
 const trustIndicators = [
@@ -37,12 +34,12 @@ const highlights = [
   },
   {
     icon: Clock,
-    title: "Self-destructing",
+    title: "Auto-expiring links",
     description: "Files auto-expire after your chosen time window.",
   },
   {
-    icon: Sparkles,
-    title: "Zero friction",
+    icon: Zap,
+    title: "No account required",
     description: "No sign-ups, no apps to install. Just drop and share.",
   },
 ];
@@ -50,76 +47,93 @@ const highlights = [
 export default function Home() {
   return (
     <>
-      <BackgroundDecorations />
       <Header />
 
-      <main className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-16">
-        <div className="container mx-auto flex max-w-5xl flex-col items-center gap-10 text-center">
-          <div className="animate-fade-in-up max-w-2xl space-y-6">
-            <Badge
-              variant="outline"
-              className="rounded-full px-4 py-1.5 text-sm font-medium"
-            >
-              Secure file sharing
-            </Badge>
+      <main className="bg-background">
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
+          <div className="grid gap-12 md:grid-cols-[1.05fr_1fr] md:items-start">
+            <div className="space-y-8">
+              <Badge
+                variant="outline"
+                className="w-fit rounded-full px-4 py-1.5 text-sm font-medium"
+              >
+                Secure file sharing
+              </Badge>
 
-            <h1 className="text-foreground text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-              Share files at <span className="gradient-text">warp speed</span>.
-            </h1>
+              <div className="space-y-4">
+                <h1 className="max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                  Share files privately in seconds.
+                </h1>
+                <p className="max-w-xl text-lg text-muted-foreground">
+                  End-to-end encrypted transfer with automatic expiry and simple
+                  sharing links. Upload once, share anywhere, and stay in
+                  control of who can access your files.
+                </p>
+              </div>
 
-            <p className="text-muted-foreground mx-auto max-w-xl text-lg leading-relaxed">
-              Secure, serverless file transfer with end-to-end encryption. No
-              account required. Files disappear automatically after download or
-              expiry.
-            </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button asChild size="lg">
+                  <Link href="#upload">Start sharing</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/how-it-works">How it works</Link>
+                </Button>
+              </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              {trustIndicators.map((item) => (
-                <div
-                  key={item.label}
-                  className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium"
-                >
-                  <item.icon className="text-primary/70 h-3.5 w-3.5" />
-                  <span>{item.label}</span>
-                </div>
-              ))}
+              <ul className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+                {trustIndicators.map((item) => (
+                  <li key={item.label} className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div id="upload" className="scroll-mt-16 rounded-xl border bg-card p-3 sm:p-4">
+              <UploadZone />
             </div>
           </div>
+        </section>
 
-          <div className="animate-fade-in-up w-full max-w-2xl [animation-delay:200ms]">
-            <UploadZone />
-          </div>
+        <section className="border-t">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-20">
+            <div className="max-w-2xl space-y-3">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Built for secure, no-friction sharing
+              </h2>
+              <p className="text-muted-foreground">
+                Send sensitive files quickly without creating accounts or
+                installing tools. Everything is designed around fast workflows
+                and clear security defaults.
+              </p>
+            </div>
 
-          <div className="animate-fade-in-up w-full max-w-3xl pt-4 [animation-delay:400ms]">
-            <Separator className="mb-10" />
-
-            <div className="grid grid-cols-2 gap-6 text-left md:grid-cols-4">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {highlights.map((item) => (
-                <div key={item.title} className="group space-y-2">
-                  <div className="bg-muted/60 ring-border/60 group-hover:bg-primary/10 group-hover:ring-primary/20 flex h-9 w-9 items-center justify-center rounded-lg ring-1 transition-all duration-300">
-                    <item.icon className="text-muted-foreground group-hover:text-primary h-4 w-4 transition-colors duration-300" />
+                <div
+                  key={item.title}
+                  className="rounded-lg border bg-card p-4 transition-colors hover:bg-muted/40"
+                >
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md border bg-muted/50">
+                    <item.icon className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <h3 className="text-[13px] font-semibold tracking-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    {item.description}
-                  </p>
+                  <h3 className="text-sm font-semibold tracking-tight">{item.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-10 flex items-center justify-center">
+            <div className="mt-8">
               <Link
                 href="/how-it-works"
-                className="group text-muted-foreground hover:text-foreground relative text-sm font-medium transition-colors"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 See how it works →
-                <span className="bg-foreground absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 transition-transform duration-200 ease-out group-hover:scale-x-100" />
               </Link>
             </div>
           </div>
-        </div>
+        </section>
       </main>
 
       <Footer variant="full" />

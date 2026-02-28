@@ -6,17 +6,16 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   return (
-    <header className="border-border/60 bg-background/70 supports-backdrop-filter:bg-background/50 sticky top-0 z-50 border-b shadow-sm backdrop-blur-xl">
-      <div className="via-primary/20 absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent to-transparent" />
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-50 border-b bg-background/95 supports-[backdrop-filter]:bg-background/80 backdrop-blur">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
-          className="group flex items-center gap-2.5 font-semibold transition-opacity hover:opacity-90"
+          className="flex items-center gap-2.5 font-semibold"
         >
-          <div className="from-primary to-primary/80 text-primary-foreground ring-primary/20 flex items-center justify-center rounded-lg bg-linear-to-br p-1.5 shadow-sm ring-1">
+          <div className="flex items-center justify-center rounded-md border bg-muted p-1.5 text-foreground">
             <CloudUpload className="h-4 w-4" />
           </div>
-          <span className="from-foreground to-foreground/70 bg-linear-to-r bg-clip-text text-lg font-bold tracking-tight text-transparent">
+          <span className="text-lg font-semibold tracking-tight text-foreground">
             FileDrop
           </span>
         </Link>
@@ -24,12 +23,11 @@ export function Header() {
         <div className="flex items-center gap-4">
           <Link
             href="/how-it-works"
-            className="group text-muted-foreground hover:text-foreground relative hidden text-sm font-medium transition-colors sm:block"
+            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
           >
             How it works
-            <span className="bg-foreground absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 transition-transform duration-200 ease-out group-hover:scale-x-100" />
           </Link>
-          <div className="bg-border h-4 w-px" />
+          <div className="bg-border h-4 w-px" aria-hidden="true" />
           <ThemeToggle />
         </div>
       </div>
