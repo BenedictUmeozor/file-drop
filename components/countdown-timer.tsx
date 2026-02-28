@@ -64,7 +64,7 @@ export function CountdownTimer({ expiresAt, className, onExpire }: CountdownTime
         className
       )}
     >
-      <Clock className="h-3.5 w-3.5" />
+      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
       <span>{timeLeft || "--"}</span>
     </span>
   );
