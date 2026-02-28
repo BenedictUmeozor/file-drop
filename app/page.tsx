@@ -90,7 +90,7 @@ export default function Home() {
               </ul>
             </div>
 
-            <div id="upload" className="scroll-mt-16 rounded-xl border bg-card p-3 shadow-sm sm:p-4">
+            <div id="upload" className="scroll-mt-16 rounded-xl border bg-card p-3 shadow-sm dark:shadow-none sm:p-4">
               <UploadZone />
             </div>
           </div>

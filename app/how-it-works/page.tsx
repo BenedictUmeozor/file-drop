@@ -1,11 +1,14 @@
-"use client";
-
-import { BackgroundDecorations } from "@/components/background-decorations";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   ArrowRight,
   Clock,
@@ -27,10 +30,6 @@ const steps = [
     description:
       "Drag and drop your file or click to browse. Supports all common formats up to 200MB.",
     icon: Upload,
-    accent:
-      "from-blue-500/20 to-cyan-500/20 dark:from-blue-500/10 dark:to-cyan-500/10",
-    iconColor: "text-blue-500 dark:text-blue-400",
-    ringColor: "ring-blue-500/20",
   },
   {
     number: 2,
@@ -38,10 +37,6 @@ const steps = [
     description:
       "Get an instant shareable link and QR code. Send it via any messaging app or let others scan it.",
     icon: Share2,
-    accent:
-      "from-violet-500/20 to-purple-500/20 dark:from-violet-500/10 dark:to-purple-500/10",
-    iconColor: "text-violet-500 dark:text-violet-400",
-    ringColor: "ring-violet-500/20",
   },
   {
     number: 3,
@@ -49,10 +44,6 @@ const steps = [
     description:
       "Anyone with the link can download the file instantly. No account or app required.",
     icon: Download,
-    accent:
-      "from-emerald-500/20 to-green-500/20 dark:from-emerald-500/10 dark:to-green-500/10",
-    iconColor: "text-emerald-500 dark:text-emerald-400",
-    ringColor: "ring-emerald-500/20",
   },
   {
     number: 4,
@@ -60,10 +51,6 @@ const steps = [
     description:
       "Your file is automatically deleted after the expiry time for privacy and security.",
     icon: Clock,
-    accent:
-      "from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10",
-    iconColor: "text-amber-500 dark:text-amber-400",
-    ringColor: "ring-amber-500/20",
   },
 ];
 
@@ -98,213 +85,153 @@ const features = [
 export default function HowItWorks() {
   return (
     <>
-      <BackgroundDecorations />
       <Header />
 
-      <main className="relative flex-1">
-        <section className="relative overflow-hidden py-20 md:py-32">
-          <div className="from-primary/3 absolute inset-0 bg-linear-to-b via-transparent to-transparent" />
-          <div className="relative container mx-auto max-w-5xl px-4 sm:px-6">
-            <div className="flex flex-col items-center text-center">
+      <main className="bg-background">
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
+          <div className="max-w-3xl space-y-8">
+            <div className="space-y-4">
               <Badge
                 variant="outline"
-                className="animate-fade-in mb-6 rounded-full px-4 py-1.5 text-sm font-medium"
+                className="w-fit rounded-full px-4 py-1.5 text-sm font-medium"
               >
                 How it works
               </Badge>
 
-              <h1 className="animate-fade-in-up fd-h1 max-w-3xl text-balance md:text-5xl lg:text-6xl">
-                Sharing files should be{" "}
-                <span className="gradient-text">effortless</span>
+              <h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                Share files in four simple steps.
               </h1>
 
-              <p className="animate-fade-in-up text-muted-foreground mt-6 max-w-xl text-lg leading-relaxed [animation-delay:100ms]">
+              <p className="max-w-2xl text-lg text-muted-foreground">
                 No accounts, no installations. Just upload, share, and your file
                 disappears when you want it to.
               </p>
+            </div>
 
-              <div className="animate-fade-in-up mt-8 flex items-center gap-3 [animation-delay:200ms]">
-                <Button asChild size="lg">
-                  <Link href="/">
-                    Start sharing
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <a href="#process">See the process</a>
-                </Button>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild size="lg">
+                <Link href="/#upload">Start sharing</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <a href="#process">See the process</a>
+              </Button>
             </div>
           </div>
         </section>
 
-        <section id="process" className="relative py-16 md:py-24">
-          <div className="container mx-auto max-w-5xl px-4 sm:px-6">
-            <div className="mb-12 flex flex-col items-center text-center md:mb-16">
-              <p className="fd-kicker mb-3">Step by step</p>
-              <h2 className="fd-h2 max-w-md text-balance">
+        <section id="process" className="border-t scroll-mt-16">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-20">
+            <div className="max-w-2xl space-y-3">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                 Four steps to instant sharing
               </h2>
+              <p className="text-muted-foreground">
+                From upload to auto-expiry, every step is built to keep sharing
+                simple and secure.
+              </p>
             </div>
 
-            <div className="relative">
-              <div className="from-border via-primary/30 to-border absolute top-0 left-8 hidden h-full w-px bg-linear-to-b md:left-1/2 md:block" />
-
-              <div className="space-y-8 md:space-y-0">
-                {steps.map((step, index) => {
-                  const isEven = index % 2 === 0;
-                  return (
+            <ol className="relative mt-8 space-y-4">
+              {steps.map((step, index) => (
+                <li key={step.number} className="relative pl-12">
+                  {index < steps.length - 1 ? (
                     <div
-                      key={step.number}
-                      className="animate-fade-in-up relative md:flex md:items-center md:gap-8"
-                      style={{ animationDelay: `${index * 120}ms` }}
-                    >
-                      <div
-                        className={`hidden md:flex md:w-1/2 ${isEven ? "md:justify-end" : "md:order-2 md:justify-start"}`}
-                      >
-                        <div
-                          className={`group border-border/60 bg-card/60 hover:border-border relative w-full max-w-md rounded-xl border p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-lg`}
-                        >
-                          <div
-                            className={`absolute inset-0 rounded-xl bg-linear-to-br ${step.accent} opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
+                      className="bg-border absolute top-10 left-5 h-[calc(100%-0.5rem)] w-px"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+
+                  <div className="bg-background text-muted-foreground absolute top-5 left-0 flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold">
+                    {step.number}
+                  </div>
+
+                  <Card className="shadow-sm dark:shadow-none">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-muted/50 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border">
+                          <step.icon
+                            className="text-muted-foreground h-4 w-4"
+                            aria-hidden="true"
                           />
-                          <div className="relative">
-                            <div className="mb-4 flex items-center gap-3">
-                              <div
-                                className={`bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1 ${step.ringColor} transition-all duration-300 group-hover:ring-2`}
-                              >
-                                <step.icon
-                                  className={`h-5 w-5 ${step.iconColor}`}
-                                />
-                              </div>
-                              <h3 className="text-lg font-semibold tracking-tight">
-                                {step.title}
-                              </h3>
-                            </div>
-                            <p className="text-muted-foreground text-[15px] leading-relaxed">
-                              {step.description}
-                            </p>
-                          </div>
                         </div>
+                        <CardTitle className="pt-1 text-base">
+                          {step.title}
+                        </CardTitle>
                       </div>
-
-                      <div className="absolute top-1/2 left-8 z-10 hidden -translate-x-1/2 -translate-y-1/2 md:left-1/2 md:flex">
-                        <div className="border-primary bg-background text-primary shadow-primary/10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold shadow-md transition-transform duration-300 hover:scale-110">
-                          {step.number}
-                        </div>
-                      </div>
-
-                      <div
-                        className={`hidden md:flex md:w-1/2 ${isEven ? "md:order-2" : ""}`}
-                      />
-
-                      <div className="md:hidden">
-                        <div className="group border-border/60 bg-card/60 hover:border-border relative rounded-xl border p-5 backdrop-blur-sm transition-all duration-300 hover:shadow-lg">
-                          <div
-                            className={`absolute inset-0 rounded-xl bg-linear-to-br ${step.accent} opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
-                          />
-                          <div className="relative">
-                            <div className="mb-3 flex items-center gap-3">
-                              <div className="border-primary bg-background text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold">
-                                {step.number}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <step.icon
-                                  className={`h-4 w-4 ${step.iconColor}`}
-                                />
-                                <h3 className="text-base font-semibold tracking-tight">
-                                  {step.title}
-                                </h3>
-                              </div>
-                            </div>
-                            <p className="text-muted-foreground text-sm leading-relaxed">
-                              {step.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {index < steps.length - 1 && (
-                        <div className="my-2 flex justify-center md:hidden">
-                          <div className="from-primary/30 to-border h-6 w-px bg-linear-to-b" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground text-sm">
+                        {step.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        <Separator className="mx-auto max-w-5xl" />
-
-        <section className="relative py-16 md:py-24">
-          <div className="container mx-auto max-w-5xl px-4 sm:px-6">
-            <div className="mb-12 flex flex-col items-center text-center md:mb-16">
-              <p className="fd-kicker mb-3">Why FileDrop</p>
-              <h2 className="fd-h2 max-w-lg text-balance">
+        <section className="border-t">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-20">
+            <div className="max-w-2xl space-y-3">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                 Built for speed, privacy, and simplicity
               </h2>
+              <p className="text-muted-foreground">
+                Everything you need to share files quickly, without adding
+                friction to your workflow.
+              </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature, index) => (
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature) => (
                 <div
                   key={feature.title}
-                  className="animate-fade-in-up group border-border/60 bg-card/60 hover:border-border hover:bg-card/80 relative overflow-hidden rounded-xl border p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
-                  style={{ animationDelay: `${index * 80}ms` }}
+                  className="rounded-lg border bg-card p-4 transition-colors hover:bg-muted/40"
                 >
-                  <div className="from-primary/3 absolute inset-0 bg-linear-to-br to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-                  <div className="relative">
-                    <div className="bg-muted/60 ring-border/60 group-hover:bg-primary/10 group-hover:ring-primary/20 mb-4 flex h-11 w-11 items-center justify-center rounded-lg ring-1 transition-all duration-300">
-                      <feature.icon className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors duration-300" />
-                    </div>
-
-                    <h3 className="mb-1.5 text-[15px] font-semibold tracking-tight">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {feature.description}
-                    </p>
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md border bg-muted/50">
+                    <feature.icon
+                      className="h-4 w-4 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                   </div>
+                  <h3 className="text-sm font-semibold tracking-tight">{feature.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{feature.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="relative overflow-hidden py-16 md:py-24">
-          <div className="from-primary/4 via-primary/2 absolute inset-0 bg-linear-to-t to-transparent" />
-          <div className="via-primary/20 absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent to-transparent" />
+        <section className="border-t">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-20">
+            <Card className="mx-auto max-w-3xl shadow-sm dark:shadow-none">
+              <CardHeader className="items-center text-center">
+                <div className="bg-muted/50 mb-2 flex h-10 w-10 items-center justify-center rounded-md border">
+                  <Upload className="text-muted-foreground h-5 w-5" aria-hidden="true" />
+                </div>
 
-          <div className="relative container mx-auto max-w-5xl px-4 sm:px-6">
-            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-              <div className="bg-primary/10 ring-primary/20 mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
-                <Upload className="text-primary h-6 w-6" />
-              </div>
+                <CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  Ready to share files securely?
+                </CardTitle>
+                <CardDescription className="max-w-xl text-sm md:text-base">
+                  No account needed. Files are encrypted in your browser before
+                  upload and auto-expire for your privacy.
+                </CardDescription>
+              </CardHeader>
 
-              <h2 className="fd-h2 mb-4 text-balance">
-                Ready to share files securely?
-              </h2>
-              <p className="text-muted-foreground mb-8 max-w-md">
-                No account needed. Files are encrypted in your browser before
-                upload and auto-expire for your privacy.
-              </p>
-
-              <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <CardContent className="flex flex-col items-center justify-center gap-3 pt-0 sm:flex-row">
                 <Button asChild size="lg">
-                  <Link href="/">
+                  <Link href="/#upload">
                     Start sharing now
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
-                <p className="text-muted-foreground text-xs">
+                <p className="text-sm text-muted-foreground">
                   Free forever · No sign-up
                 </p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
       </main>
