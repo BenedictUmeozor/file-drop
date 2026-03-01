@@ -15,15 +15,51 @@ jobs:
     steps:
       - name: Trigger Cleanup Endpoint
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.APP_URL }}/api/cleanup" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          app_url="${{ secrets.APP_URL }}"
+          cron_secret="${{ secrets.CRON_SECRET }}"
+
+          app_url_set="no"
+          cron_secret_set="no"
+
+          if [ -n "$app_url" ]; then
+            app_url_set="yes"
+          fi
+
+          if [ -n "$cron_secret" ]; then
+            cron_secret_set="yes"
+          fi
+
+          echo "APP_URL set: $app_url_set"
+          echo "CRON_SECRET set: $cron_secret_set"
+          echo "CRON_SECRET length: ${#cron_secret}"
+
+          if [ -z "$app_url" ] || [ -z "$cron_secret" ]; then
+            echo "::error::Missing required secrets. Ensure APP_URL and CRON_SECRET are both configured."
+            exit 1
+          fi
+
+          set +e
+          response=$(curl -sS --fail-with-body -w "\n%{http_code}" -X POST "$app_url/api/cleanup" \
+            -H "Authorization: Bearer $cron_secret" \
             -H "Content-Type: application/json")
+          curl_exit=$?
+          set -e
           
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
           
           echo "HTTP Status: $http_code"
           echo "Response: $body"
+
+          if ! [[ "$http_code" =~ ^[0-9]{3}$ ]]; then
+            echo "::error::Invalid HTTP status code returned: '$http_code'"
+            exit 1
+          fi
+
+          if [ "$curl_exit" -ne 0 ] && [ "$http_code" -eq 000 ]; then
+            echo "::error::Cleanup request failed before receiving an HTTP response"
+            exit 1
+          fi
           
           if [ "$http_code" -ne 200 ]; then
             echo "::error::Cleanup failed with status $http_code"

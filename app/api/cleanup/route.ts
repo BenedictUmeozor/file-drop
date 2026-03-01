@@ -8,13 +8,20 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
+    const effectiveSecret = process.env.CRON_SECRET?.trim();
+    const normalizedAuthHeader = authHeader?.trim();
     const isProxyTrigger = request.headers.get("x-cleanup-trigger") === "proxy";
 
+    if (!effectiveSecret) {
+      return NextResponse.json(
+        { error: "Server misconfiguration: CRON_SECRET not set" },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     if (
-      cronSecret &&
       !isProxyTrigger &&
-      authHeader !== `Bearer ${cronSecret}`
+      normalizedAuthHeader !== `Bearer ${effectiveSecret}`
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "Cache-Control": "no-store" } });
     }
