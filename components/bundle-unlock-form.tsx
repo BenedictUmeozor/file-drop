@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Lock, Loader2, ShieldAlert } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Lock, Loader2, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -17,6 +17,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -134,17 +135,17 @@ export function BundleUnlockForm({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="mb-2 flex items-center gap-3">
-          <div className="rounded-lg bg-muted p-2 text-primary">
-            <ShieldAlert className="h-5 w-5" />
+    <Card className="w-full shadow-sm dark:shadow-none">
+      <CardHeader className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-muted/50">
+            <ShieldAlert className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <CardTitle>Password Protected</CardTitle>
-            <CardDescription>
-              Enter the passphrase to access these files
-            </CardDescription>
+            <CardTitle className="text-xl font-semibold tracking-tight">
+              Password Protected
+            </CardTitle>
+            <CardDescription>Enter the passphrase to access this bundle.</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -168,7 +169,8 @@ export function BundleUnlockForm({
                 type="button"
                 onClick={() => setShowPassphrase(!showPassphrase)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
+                aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}
+                aria-pressed={showPassphrase}
               >
                 {showPassphrase ? (
                   <EyeOff className="h-4 w-4" />
@@ -180,18 +182,21 @@ export function BundleUnlockForm({
           </div>
 
           {error && (
-            <div className="text-sm text-destructive">
-              {error}
-              {retryAfter !== null && (
-                <p className="mt-1 text-xs">
-                  Please wait {retryAfter} seconds before trying again.
-                </p>
-              )}
-            </div>
+            <Alert variant="destructive" className="py-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                {error}
+                {retryAfter !== null && (
+                  <span className="mt-1 block">
+                    Please wait {retryAfter} seconds before trying again.
+                  </span>
+                )}
+              </AlertDescription>
+            </Alert>
           )}
         </CardContent>
 
-        <CardFooter>
+        <CardFooter className="border-t bg-muted/20 p-4">
           <Button
             type="submit"
             disabled={isSubmitting || !passphrase || retryAfter !== null}

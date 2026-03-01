@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { BundleUnlockForm } from "./bundle-unlock-form";
 import { EncryptedBundleDownloader } from "./encrypted-bundle-downloader";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FileMetadata {
   fileId: string;
@@ -72,6 +74,18 @@ export function EncryptedBundleFlow({
         initialPassphrase={capturedPassphrase}
         isExpired={isExpired}
       />
+    );
+  }
+
+  // Stage 1 guard: expired bundles should show expiry state, not unlock form.
+  if (isExpired) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          This bundle has expired and can no longer be unlocked or downloaded.
+        </AlertDescription>
+      </Alert>
     );
   }
 

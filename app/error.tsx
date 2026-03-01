@@ -1,9 +1,14 @@
 "use client";
 
-import { BackgroundDecorations } from "@/components/background-decorations";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
 import { AlertTriangle, ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
@@ -14,26 +19,28 @@ interface ErrorProps {
 
 export default function Error({ reset }: ErrorProps) {
   return (
-    <>
-      <BackgroundDecorations />
-      <div className="flex min-h-screen flex-col">
-        <Header />
+    <div className="flex min-h-screen flex-col">
+      <Header />
 
-        <main className="flex flex-1 flex-col items-center justify-center p-4">
-          <div className="animate-fade-in-up flex w-full max-w-md flex-col items-center text-center">
-            <div className="bg-destructive/10 ring-destructive/20 shadow-destructive/5 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg ring-1">
-              <AlertTriangle className="text-destructive h-7 w-7" />
-            </div>
-
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Something Went Wrong
-            </h1>
-            <p className="text-muted-foreground mt-2 max-w-sm">
-              An unexpected error occurred. Please try again or go back to the
-              home page.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <main className="bg-background flex flex-1 items-center">
+        <section className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6">
+          <Card className="mx-auto w-full max-w-md shadow-sm dark:shadow-none">
+            <CardHeader className="items-center text-center">
+              <div className="bg-muted/50 mb-2 flex h-10 w-10 items-center justify-center rounded-md border">
+                <AlertTriangle
+                  className="text-muted-foreground h-5 w-5"
+                  aria-hidden="true"
+                />
+              </div>
+              <h1 className="text-2xl leading-none font-semibold tracking-tight">
+                Something Went Wrong
+              </h1>
+              <CardDescription>
+                An unexpected error occurred. Please try again or go back to the
+                home page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center gap-3 pt-0 sm:flex-row">
               <Button onClick={reset} size="lg">
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Try Again
@@ -44,12 +51,12 @@ export default function Error({ reset }: ErrorProps) {
                   Back to Home
                 </Link>
               </Button>
-            </div>
-          </div>
-        </main>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
 
-        <Footer />
-      </div>
-    </>
+      <Footer />
+    </div>
   );
 }

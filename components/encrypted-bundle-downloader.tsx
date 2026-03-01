@@ -123,7 +123,7 @@ export function EncryptedBundleDownloader({
     if (isDownloadingAll || isExpired) return;
     setIsDownloadingAll(true);
     setDownloadAllProgress(0);
-    setDownloadAllStatus("Preparing download\u2026");
+    setDownloadAllStatus("Preparing download...");
     setDownloadAllError(null);
 
     try {
@@ -193,7 +193,7 @@ export function EncryptedBundleDownloader({
         zip.file(safeName, decryptedBytes);
       }
 
-      setDownloadAllStatus("Creating ZIP archive\u2026");
+      setDownloadAllStatus("Creating ZIP archive...");
       setDownloadAllProgress(99);
 
       const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
@@ -263,16 +263,18 @@ export function EncryptedBundleDownloader({
 
   if (!isUnlocked) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg bg-muted p-2 text-primary">
-              <Shield className="h-6 w-6" />
+      <Card className="w-full shadow-sm dark:shadow-none">
+        <CardHeader className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-muted/50">
+              <Shield className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
-              <CardTitle>End-to-End Encrypted Files</CardTitle>
+              <CardTitle className="text-xl font-semibold tracking-tight">
+                End-to-End Encrypted Bundle
+              </CardTitle>
               <CardDescription>
-                Enter passphrase to decrypt and download
+                Enter your passphrase to decrypt and download files.
               </CardDescription>
             </div>
           </div>
@@ -299,6 +301,8 @@ export function EncryptedBundleDownloader({
                   onClick={() => setShowPassphrase(!showPassphrase)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   disabled={isValidating}
+                  aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}
+                  aria-pressed={showPassphrase}
                 >
                   {showPassphrase ? (
                     <EyeOff className="h-4 w-4" />
@@ -309,12 +313,14 @@ export function EncryptedBundleDownloader({
               </div>
             </div>
 
-            <div className="rounded-lg border bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
-              <p className="font-medium mb-1 text-foreground">🔒 Your files are encrypted</p>
+            <div className="rounded-md border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+              <p className="mb-1 flex items-center gap-1.5 font-medium text-foreground">
+                <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+                Client-side decryption
+              </p>
               <p>
-                Files were encrypted in the sender&apos;s browser and will be decrypted
-                locally in yours. The server never sees the passphrase or decryption
-                keys.
+                Files are decrypted locally in your browser. The server does not
+                receive your passphrase or decryption keys.
               </p>
             </div>
 
@@ -335,7 +341,7 @@ export function EncryptedBundleDownloader({
             )}
           </CardContent>
 
-          <CardFooter>
+          <CardFooter className="border-t bg-muted/20 p-4">
             <Button
               type="submit"
               disabled={passphrase.length < 8 || isValidating || !!isExpired}
@@ -361,11 +367,9 @@ export function EncryptedBundleDownloader({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border bg-muted/50 px-4 py-2">
-        <div className="flex items-center gap-2 text-sm text-primary">
-          <Shield className="h-4 w-4" />
-          <span className="font-medium">Decryption unlocked</span>
-        </div>
+      <div className="flex items-center gap-2.5 rounded-md border bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
+        <Shield className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span>Decryption unlocked</span>
       </div>
 
       {isExpired && (
@@ -377,14 +381,16 @@ export function EncryptedBundleDownloader({
         </Alert>
       )}
 
-      <Card className="w-full">
+      <Card className="w-full shadow-sm dark:shadow-none">
         <CardContent className="p-0">
           <div className="custom-scrollbar max-h-96 overflow-y-auto">
             {files.map((file, index) => (
               <div key={file.fileId}>
-                <div className="flex items-center justify-between p-4">
+                <div className="hover:bg-muted/40 flex items-center justify-between gap-3 px-4 py-3.5 transition-colors">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <File className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-muted/50">
+                      <File className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-foreground">
                         {file.filename}
@@ -424,7 +430,7 @@ export function EncryptedBundleDownloader({
           </div>
         </CardContent>
 
-          <CardFooter className="bg-muted/20 flex-col items-stretch gap-3 border-t p-4">
+        <CardFooter className="flex-col items-stretch gap-3 border-t bg-muted/20 p-4">
             {downloadAllError && (
               <Alert variant="destructive" className="w-full py-2">
                 <AlertCircle className="h-4 w-4" />
@@ -453,7 +459,7 @@ export function EncryptedBundleDownloader({
                 {isDownloadingAll ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Downloading&hellip;
+                    Downloading...
                   </>
                 ) : (
                   <>
@@ -475,7 +481,7 @@ export function EncryptedBundleDownloader({
                 </a>
               </Button>
             )}
-          </CardFooter>
+        </CardFooter>
       </Card>
     </div>
   );

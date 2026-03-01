@@ -1,9 +1,14 @@
-import { BackgroundDecorations } from "@/components/background-decorations";
 import { DownloadPageContent } from "@/components/download-page-content";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, CloudUpload, XCircle } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
+import { AlertCircle, ArrowLeft, Clock, CloudUpload } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 
@@ -92,57 +97,68 @@ export default async function DownloadPage({ params }: PageProps) {
   const isExpired = error?.status === 410;
 
   return (
-    <>
-      <BackgroundDecorations />
+    <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-4 py-16">
-        {metadata ? (
-          <DownloadPageContent metadata={metadata} bundleId={id} />
-        ) : isExpired ? (
-          <div className="animate-fade-in-up flex flex-col items-center text-center">
-            <div className="bg-muted ring-border/60 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ring-1">
-              <Clock className="text-muted-foreground h-7 w-7" />
-            </div>
+      <main className="flex-1 bg-background">
+        <section
+          className={
+            metadata
+              ? "mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-20"
+              : "mx-auto w-full max-w-6xl px-4 py-12 md:px-6"
+          }
+        >
+          {metadata ? (
+            <DownloadPageContent metadata={metadata} bundleId={id} />
+          ) : (
+            <Card className="mx-auto w-full max-w-md shadow-sm dark:shadow-none">
+              <CardHeader className="items-center text-center">
+                <div className="bg-destructive/10 border-destructive/20 mb-2 flex h-10 w-10 items-center justify-center rounded-md border">
+                  {isExpired ? (
+                    <Clock
+                      className="text-destructive h-5 w-5"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <AlertCircle
+                      className="text-destructive h-5 w-5"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
 
-            <h1 className="text-2xl font-bold tracking-tight">Link Expired</h1>
-            <p className="text-muted-foreground mt-2 max-w-sm">
-              This transfer link has expired and the files have been permanently
-              deleted from our servers.
-            </p>
+                <h1 className="text-2xl font-semibold tracking-tight leading-none">
+                  {isExpired ? "Link Expired" : "Bundle Not Found"}
+                </h1>
+                <CardDescription>
+                  {isExpired
+                    ? "This transfer link has expired and the files were permanently removed."
+                    : "We could not find this bundle. It may have expired, been deleted, or the link may be incorrect."}
+                </CardDescription>
+              </CardHeader>
 
-            <Button asChild className="mt-8" size="lg">
-              <Link href="/">
-                <CloudUpload className="mr-2 h-4 w-4" />
-                Start New Transfer
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="animate-fade-in-up flex flex-col items-center text-center">
-            <div className="bg-destructive/10 ring-destructive/20 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ring-1">
-              <XCircle className="text-destructive h-7 w-7" />
-            </div>
-
-            <h1 className="text-2xl font-bold tracking-tight">
-              Bundle Not Found
-            </h1>
-            <p className="text-muted-foreground mt-2 max-w-sm">
-              We couldn&apos;t find the files you&apos;re looking for. They may
-              have been deleted or the link is incorrect.
-            </p>
-
-            <Button variant="outline" asChild className="mt-8" size="lg">
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Return Home
-              </Link>
-            </Button>
-          </div>
-        )}
+              <CardContent className="flex flex-col items-center gap-3 pt-0 sm:flex-row sm:justify-center">
+                {isExpired && (
+                  <Button asChild size="lg">
+                    <Link href="/">
+                      <CloudUpload className="mr-2 h-4 w-4" />
+                      Start New Transfer
+                    </Link>
+                  </Button>
+                )}
+                <Button variant={isExpired ? "outline" : "default"} asChild size="lg">
+                  <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Return Home
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </section>
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
