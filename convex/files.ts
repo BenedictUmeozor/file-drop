@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { internal } from "./_generated/api";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 
@@ -260,6 +261,38 @@ export const getFileForServer = query({
   },
 });
 
+export const getAllUploadThingKeys = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const files = await ctx.db.query("files").collect();
+    return files.map((file) => file.uploadThingKey);
+  },
+});
+
+/**
+ * Server-token-guarded query - returns all UploadThing keys from files table.
+ * Only callable from Next.js server routes with the correct token.
+ */
+export const getAllUploadThingKeysForServer = query({
+  args: {
+    serverToken: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    if (args.serverToken !== SERVER_TOKEN) {
+      throw new Error("Unauthorized: Invalid server token");
+    }
+
+    const page = await ctx.db.query("files").paginate(args.paginationOpts);
+    return {
+      keys: page.page.map((file) => file.uploadThingKey),
+      isDone: page.isDone,
+      continueCursor: page.continueCursor,
+      pageStatus: page.pageStatus,
+    };
+  },
+});
+
 export const deleteFile = mutation({
   args: { fileId: v.string() },
   handler: async (ctx, args) => {
@@ -290,9 +323,11 @@ export const deleteBundle = mutation({
       .collect();
 
     const uploadThingKeys: string[] = [];
+    const deletedFileIds: string[] = [];
 
     for (const file of files) {
       uploadThingKeys.push(file.uploadThingKey);
+      deletedFileIds.push(file.fileId);
       await ctx.db.delete(file._id);
     }
 
@@ -315,11 +350,13 @@ export const deleteBundle = mutation({
       await ctx.db.delete(attempt._id);
     }
 
+    const deletedBundle = !!bundle;
+
     if (bundle) {
       await ctx.db.delete(bundle._id);
     }
 
-    return { deleted: true, uploadThingKeys };
+    return { deleted: deletedBundle, uploadThingKeys, deletedFileIds };
   },
 });
 
