@@ -4,7 +4,7 @@
 
 > Share up to 10 files at once with a single link or QR code. Files auto-expire for privacy.
 
-🔗 **Live Demo:** [Coming Soon](#)
+🔗 **Live Demo:** [https://file-drop-nine.vercel.app/](https://file-drop-nine.vercel.app/)
 
 ---
 
@@ -68,8 +68,6 @@
    E2E_UNLOCK_VERIFIER_SECRET=your_64_char_hex_secret
    ```
 
-   > **Password Protection:** See [PASSWORD_PROTECTION_SETUP.md](PASSWORD_PROTECTION_SETUP.md) for details on `BUNDLE_AUTH_SERVER_TOKEN`.
-   >
    > **E2E Encryption:** Generate `E2E_UNLOCK_VERIFIER_SECRET` with:
    > ```bash
    > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
